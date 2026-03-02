@@ -14,8 +14,9 @@ public record RoomRequest(
 );
 
 public record DiagnosisRequest(
-    [Required] string Code,
+    [Required] string IcdCode,
     [Required] string Name,
+    string? Category,
     string? Description
 );
 
@@ -26,38 +27,56 @@ public record MedicalServiceRequest(
 );
 
 public record PatientCreateRequest(
-    string? Code,
     [Required] string FullName,
-    int? BirthYear,
-    Gender? Gender,
-    string? Address
+    [Required] DateOnly DateOfBirth,
+    [Required] Gender Gender,
+    string? Phone,
+    string? Address,
+    string? Note
 );
 
 public record PatientUpdateRequest(
     [Required] string FullName,
-    int? BirthYear,
-    Gender? Gender,
-    string? Address
+    [Required] DateOnly DateOfBirth,
+    [Required] Gender Gender,
+    string? Phone,
+    string? Address,
+    string? Note
 );
 
 public record VisitCreateRequest(
     [Required] long PatientId,
-    long? DoctorId,
-    long? RoomId,
-    long? DiagnosisId,
-    decimal? ExaminationFee,
-    string? Notes
+    [Required] long DoctorId,
+    [Required] long RoomId,
+    string? Reason
 );
 
 public record VisitUpdateRequest(
     long? DoctorId,
     long? RoomId,
-    long? DiagnosisId,
-    decimal? ExaminationFee,
-    string? Notes
+    string? Reason,
+    string? Conclusion,
+    VisitStatus? Status
 );
 
 public record VisitServiceAddRequest(
     [Required] long ServiceId,
     [Required][Range(1, int.MaxValue)] int Quantity
+);
+
+public record VisitDiagnosisAddRequest(
+    [Required] long DiagnosisId,
+    bool IsPrimary = false,
+    string? Note = null
+);
+
+public record PaymentCreateRequest(
+    [Required] decimal ExaminationFee,
+    decimal Discount = 0,
+    PaymentMethod PaymentMethod = PaymentMethod.Cash,
+    string? CashierNote = null
+);
+
+public record VisitStatusUpdateRequest(
+    [Required] VisitStatus Status
 );

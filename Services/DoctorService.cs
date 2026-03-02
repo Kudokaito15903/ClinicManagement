@@ -47,5 +47,5 @@ public class DoctorService
            ?? throw new ResourceNotFoundException($"Bac si khong ton tai: {id}");
 
     public static DoctorResponse ToResponse(Doctor d)
-        => new(d.Id, d.FullName, d.Specialty);
+        => new(d.Id, d.Code, d.FullName, d.Specialty, d.Phone, d.Email, d.IsActive);
 }

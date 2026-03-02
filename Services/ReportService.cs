@@ -25,7 +25,7 @@ public class ReportService
         var todayEnd = todayStart.AddDays(1).AddTicks(-1);
         var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        long totalPatients = await _db.Patients.CountAsync(p => !p.Deleted);
+        long totalPatients = await _db.Patients.CountAsync(p => !p.IsDeleted);
         long visitsToday = await _db.Visits.CountAsync(v => v.VisitDate >= todayStart && v.VisitDate <= todayEnd);
         long visitsThisMonth = await _db.Visits.CountAsync(v => v.VisitDate >= monthStart && v.VisitDate <= todayEnd);
 
@@ -43,9 +43,9 @@ public class ReportService
         var end = to.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
 
         long totalVisits = await _db.Visits.CountAsync(v => v.VisitDate >= start && v.VisitDate <= end);
-        decimal examTotal = await _db.Visits
-            .Where(v => v.VisitDate >= start && v.VisitDate <= end)
-            .SumAsync(v => (decimal?)v.ExaminationFee) ?? 0;
+        decimal examTotal = await _db.Payments
+            .Where(p => p.Visit.VisitDate >= start && p.Visit.VisitDate <= end)
+            .SumAsync(p => (decimal?)p.ExaminationFee) ?? 0;
 
         decimal svcTotal = await _db.VisitServices
             .Where(vs => vs.Visit.VisitDate >= start && vs.Visit.VisitDate <= end)
@@ -55,7 +55,8 @@ public class ReportService
         var visitsByDay = await _db.Visits
             .Where(v => v.VisitDate >= start && v.VisitDate <= end)
             .GroupBy(v => v.VisitDate.Date)
-            .Select(g => new { Date = g.Key, Count = g.LongCount(), ExamSum = g.Sum(v => v.ExaminationFee) })
+            .Select(g => new { Date = g.Key, Count = g.LongCount(),
+                ExamSum = g.Sum(v => v.Payment != null ? v.Payment.ExaminationFee : 0) })
             .ToListAsync();
 
         var svcByDay = await _db.VisitServices
@@ -89,16 +90,16 @@ public class ReportService
             await _visitService.ToResponseAsync(visit),
             services,
             serviceTotal,
-            visit.ExaminationFee,
-            serviceTotal + visit.ExaminationFee
+            visit.Payment?.ExaminationFee ?? 0,
+            serviceTotal + (visit.Payment?.ExaminationFee ?? 0)
         );
     }
 
     private async Task<decimal> SumRevenueAsync(DateTime from, DateTime to)
     {
-        var examFee = await _db.Visits
-            .Where(v => v.VisitDate >= from && v.VisitDate <= to)
-            .SumAsync(v => (decimal?)v.ExaminationFee) ?? 0;
+        var examFee = await _db.Payments
+            .Where(p => p.Visit.VisitDate >= from && p.Visit.VisitDate <= to)
+            .SumAsync(p => (decimal?)p.ExaminationFee) ?? 0;
 
         var svcFee = await _db.VisitServices
             .Where(vs => vs.Visit.VisitDate >= from && vs.Visit.VisitDate <= to)

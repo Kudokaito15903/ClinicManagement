@@ -26,6 +26,10 @@ public class BillingService
     {
         var visit = await _visitService.GetByIdRawAsync(visitId);
         var patient = visit.Patient;
+        var payment = visit.Payment;
+        var primaryDiagnosis = visit.VisitDiagnoses
+            .FirstOrDefault(vd => vd.IsPrimary)?.Diagnosis
+            ?? visit.VisitDiagnoses.FirstOrDefault()?.Diagnosis;
 
         var vsList = await _db.VisitServices
             .Include(vs => vs.Service)
@@ -34,6 +38,7 @@ public class BillingService
 
         var services = vsList.Select(_visitServiceService.ToResponse).ToList();
         var serviceTotal = services.Sum(s => s.Subtotal);
+        var examFee = payment?.ExaminationFee ?? 0;
 
         return new BillResponse(
             visit.Id,
@@ -41,17 +46,17 @@ public class BillingService
             _clinicName,
             patient?.Code ?? "",
             patient?.FullName ?? "",
-            patient?.BirthYear,
-            patient?.Gender?.ToString(),
+            patient?.DateOfBirth.Year,
+            patient?.Gender.ToString(),
             patient?.Address,
             visit.Doctor?.FullName,
             visit.Room?.Name,
-            visit.Diagnosis?.Name,
-            visit.ExaminationFee,
-            visit.Notes,
+            primaryDiagnosis?.Name,
+            examFee,
+            visit.Reason,
             services,
             serviceTotal,
-            visit.ExaminationFee + serviceTotal
+            examFee + serviceTotal
         );
     }
 

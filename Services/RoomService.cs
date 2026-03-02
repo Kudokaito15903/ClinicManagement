@@ -47,5 +47,5 @@ public class RoomService
            ?? throw new ResourceNotFoundException($"Phong khong ton tai: {id}");
 
     public static RoomResponse ToResponse(Room r)
-        => new(r.Id, r.Name, r.Description);
+        => new(r.Id, r.Code, r.Name, r.Description, r.IsActive);
 }

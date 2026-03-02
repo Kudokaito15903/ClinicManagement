@@ -19,7 +19,7 @@ public class PatientService
     public async Task<List<PatientResponse>> FindAllAsync(string? keyword)
     {
         var query = _db.Patients
-            .Where(p => !p.Deleted);
+            .Where(p => !p.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(keyword))
         {
@@ -38,21 +38,17 @@ public class PatientService
 
     public async Task<PatientResponse> CreateAsync(PatientCreateRequest req)
     {
-        string code = string.IsNullOrWhiteSpace(req.Code) ? await GenerateCodeAsync() : req.Code;
-
-        if (!string.IsNullOrWhiteSpace(req.Code))
-        {
-            if (await _db.Patients.AnyAsync(p => p.Code == req.Code))
-                throw new BadRequestException($"Ma benh nhan da ton tai: {req.Code}");
-        }
+        string code = await GenerateCodeAsync();
 
         var patient = new Patient
         {
             Code = code,
             FullName = req.FullName,
-            BirthYear = req.BirthYear,
+            DateOfBirth = req.DateOfBirth,
             Gender = req.Gender,
-            Address = req.Address
+            Phone = req.Phone,
+            Address = req.Address,
+            Note = req.Note
         };
 
         _db.Patients.Add(patient);
@@ -65,9 +61,11 @@ public class PatientService
     {
         var patient = await GetByIdAsync(id);
         patient.FullName = req.FullName;
-        patient.BirthYear = req.BirthYear;
+        patient.DateOfBirth = req.DateOfBirth;
         patient.Gender = req.Gender;
+        patient.Phone = req.Phone;
         patient.Address = req.Address;
+        patient.Note = req.Note;
 
         await _db.SaveChangesAsync();
         return ToResponse(patient);
@@ -76,23 +74,32 @@ public class PatientService
     public async Task DeleteAsync(long id)
     {
         var patient = await GetByIdAsync(id);
-        patient.Deleted = true;
+        patient.IsDeleted = true;
         await _db.SaveChangesAsync();
     }
 
     public async Task<Patient> GetByIdAsync(long id)
         => await _db.Patients
-            .FirstOrDefaultAsync(p => p.Id == id && !p.Deleted)
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted)
            ?? throw new ResourceNotFoundException($"Benh nhan khong ton tai: {id}");
 
     private async Task<string> GenerateCodeAsync()
     {
-        long count = await _db.Patients.CountAsync() + 1;
-        return $"BN{count:D5}";
+        long maxId = await _db.Patients.AnyAsync()
+            ? await _db.Patients.MaxAsync(p => p.Id)
+            : 0;
+        string candidate;
+        do
+        {
+            maxId++;
+            candidate = $"BN{maxId:D5}";
+        } while (await _db.Patients.AnyAsync(p => p.Code == candidate));
+
+        return candidate;
     }
 
     public PatientResponse ToResponse(Patient p) => new(
-        p.Id, p.Code, p.FullName, p.BirthYear, p.Gender, p.Address,
+        p.Id, p.Code, p.FullName, p.DateOfBirth, p.Gender, p.Phone, p.Address, p.Note,
         null, null, null
     );
 }

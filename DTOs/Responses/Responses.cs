@@ -4,35 +4,63 @@ namespace ClinicManagement.DTOs.Responses;
 
 public record RefResponse(long Id, string Name);
 
-public record DoctorResponse(long Id, string FullName, string? Specialty);
+public record DoctorResponse(long Id, string Code, string FullName, string? Specialty, string? Phone, string? Email, bool IsActive);
 
-public record RoomResponse(long Id, string Name, string? Description);
+public record RoomResponse(long Id, string Code, string Name, string? Description, bool IsActive);
 
-public record DiagnosisResponse(long Id, string Code, string Name, string? Description);
+public record DiagnosisResponse(long Id, string IcdCode, string Name, string? Category, string? Description);
 
-public record MedicalServiceResponse(long Id, string Code, string Name, decimal Price);
+public record MedicalServiceResponse(long Id, string Code, string Name, string Unit, decimal Price, string? Category, bool IsActive);
 
 public record PatientResponse(
     long Id,
     string Code,
     string FullName,
-    int? BirthYear,
-    Gender? Gender,
+    DateOnly DateOfBirth,
+    Gender Gender,
+    string? Phone,
     string? Address,
+    string? Note,
     RefResponse? Doctor,
     RefResponse? Room,
-    RefResponse? Diagnosis
+    List<DiagnosisResponse>? Diagnoses
 );
 
 public record VisitResponse(
     long Id,
+    string Code,
     PatientResponse? Patient,
     RefResponse? Doctor,
     RefResponse? Room,
-    RefResponse? Diagnosis,
     DateTime VisitDate,
+    string? Reason,
+    string? Conclusion,
+    string Status,
+    List<DiagnosisResponse>? Diagnoses
+);
+
+public record PaymentResponse(
+    long Id,
+    long VisitId,
     decimal ExaminationFee,
-    string? Notes
+    decimal ServiceTotal,
+    decimal GrandTotal,
+    decimal Discount,
+    decimal FinalAmount,
+    string PaymentMethod,
+    DateTime? PaidAt,
+    string? CashierNote,
+    DateTime CreatedAt
+);
+
+public record VisitListItemResponse(
+    long Id,
+    string Code,
+    string PatientName,
+    string? DoctorName,
+    string? RoomName,
+    DateTime VisitDate,
+    string Status
 );
 
 public record VisitSummaryResponse(

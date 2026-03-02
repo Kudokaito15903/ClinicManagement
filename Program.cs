@@ -19,6 +19,8 @@ builder.Services.AddScoped<MedicalServiceService>();
 builder.Services.AddScoped<PatientService>();
 builder.Services.AddScoped<VisitService>();
 builder.Services.AddScoped<VisitServiceService>();
+builder.Services.AddScoped<VisitDiagnosisService>();
+builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<ReportService>();
 

@@ -18,7 +18,7 @@ public class DiagnosisService
         if (!string.IsNullOrWhiteSpace(keyword))
         {
             var kw = keyword.ToLower();
-            query = query.Where(d => d.Name.ToLower().Contains(kw) || d.Code.ToLower().Contains(kw));
+            query = query.Where(d => d.Name.ToLower().Contains(kw) || d.IcdCode.ToLower().Contains(kw));
         }
         return await query.Select(d => ToResponse(d)).ToListAsync();
     }
@@ -28,7 +28,7 @@ public class DiagnosisService
 
     public async Task<DiagnosisResponse> CreateAsync(DiagnosisRequest req)
     {
-        var diag = new Diagnosis { Code = req.Code, Name = req.Name, Description = req.Description };
+        var diag = new Diagnosis { IcdCode = req.IcdCode, Name = req.Name, Category = req.Category, Description = req.Description };
         _db.Diagnoses.Add(diag);
         await _db.SaveChangesAsync();
         return ToResponse(diag);
@@ -37,8 +37,9 @@ public class DiagnosisService
     public async Task<DiagnosisResponse> UpdateAsync(long id, DiagnosisRequest req)
     {
         var diag = await GetByIdAsync(id);
-        diag.Code = req.Code;
+        diag.IcdCode = req.IcdCode;
         diag.Name = req.Name;
+        diag.Category = req.Category;
         diag.Description = req.Description;
         await _db.SaveChangesAsync();
         return ToResponse(diag);
@@ -56,5 +57,5 @@ public class DiagnosisService
            ?? throw new ResourceNotFoundException($"Chan doan khong ton tai: {id}");
 
     public static DiagnosisResponse ToResponse(Diagnosis d)
-        => new(d.Id, d.Code, d.Name, d.Description);
+        => new(d.Id, d.IcdCode, d.Name, d.Category, d.Description);
 }
