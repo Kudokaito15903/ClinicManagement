@@ -3,6 +3,7 @@ using System;
 using ClinicManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ClinicManagement.Migrations
 {
     [DbContext(typeof(ClinicDbContext))]
-    partial class ClinicDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260303132232_InitialUpdate")]
+    partial class InitialUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -66,14 +69,6 @@ namespace ClinicManagement.Migrations
                         .HasColumnType("bigint");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("AcademicTitle")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasDefaultValue("None")
-                        .HasColumnName("academic_title");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -348,103 +343,6 @@ namespace ClinicManagement.Migrations
                         .IsUnique();
 
                     b.ToTable("rooms", (string)null);
-                });
-
-            modelBuilder.Entity("ClinicManagement.Entities.SystemConfig", b =>
-                {
-                    b.Property<string>("ConfigKey")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("config_key");
-
-                    b.Property<string>("ConfigValue")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("config_value");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("description");
-
-                    b.HasKey("ConfigKey");
-
-                    b.ToTable("system_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ConfigKey = "clinic_name",
-                            ConfigValue = "Phòng khám Đa khoa",
-                            Description = "Tên phòng khám"
-                        },
-                        new
-                        {
-                            ConfigKey = "clinic_address",
-                            ConfigValue = "123 Đường ABC, Quận X, TP.HCM",
-                            Description = "Địa chỉ phòng khám"
-                        },
-                        new
-                        {
-                            ConfigKey = "clinic_phone",
-                            ConfigValue = "028 1234 5678",
-                            Description = "Số điện thoại phòng khám"
-                        },
-                        new
-                        {
-                            ConfigKey = "clinic_email",
-                            ConfigValue = "",
-                            Description = "Email phòng khám"
-                        },
-                        new
-                        {
-                            ConfigKey = "clinic_tax_code",
-                            ConfigValue = "",
-                            Description = "Mã số thuế"
-                        },
-                        new
-                        {
-                            ConfigKey = "examination_fee",
-                            ConfigValue = "100000",
-                            Description = "Phí khám mặc định – bác sĩ thường (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "fee_master_cki",
-                            ConfigValue = "250000",
-                            Description = "Phí khám – Thạc sĩ / Bác sĩ chuyên khoa I (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "fee_phd_ckii",
-                            ConfigValue = "350000",
-                            Description = "Phí khám – Tiến sĩ / Bác sĩ chuyên khoa II (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "fee_associate_professor",
-                            ConfigValue = "450000",
-                            Description = "Phí khám – Phó Giáo sư (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "fee_professor",
-                            ConfigValue = "550000",
-                            Description = "Phí khám – Giáo sư (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "currency",
-                            ConfigValue = "VND",
-                            Description = "Đơn vị tiền tệ"
-                        },
-                        new
-                        {
-                            ConfigKey = "receipt_footer",
-                            ConfigValue = "Cảm ơn quý khách đã tin tưởng!",
-                            Description = "Chân trang phiếu thu"
-                        });
                 });
 
             modelBuilder.Entity("ClinicManagement.Entities.User", b =>

@@ -20,7 +20,12 @@ public class DoctorService
 
     public async Task<DoctorResponse> CreateAsync(DoctorRequest req)
     {
-        var doctor = new Doctor { FullName = req.FullName, Specialty = req.Specialty };
+        var doctor = new Doctor
+        {
+            FullName      = req.FullName,
+            Specialty     = req.Specialty,
+            AcademicTitle = req.AcademicTitle ?? AcademicTitle.None
+        };
         _db.Doctors.Add(doctor);
         await _db.SaveChangesAsync();
         return ToResponse(doctor);
@@ -29,8 +34,9 @@ public class DoctorService
     public async Task<DoctorResponse> UpdateAsync(long id, DoctorRequest req)
     {
         var doctor = await GetByIdAsync(id);
-        doctor.FullName = req.FullName;
-        doctor.Specialty = req.Specialty;
+        doctor.FullName      = req.FullName;
+        doctor.Specialty     = req.Specialty;
+        doctor.AcademicTitle = req.AcademicTitle ?? doctor.AcademicTitle;
         await _db.SaveChangesAsync();
         return ToResponse(doctor);
     }
@@ -47,5 +53,5 @@ public class DoctorService
            ?? throw new ResourceNotFoundException($"Bac si khong ton tai: {id}");
 
     public static DoctorResponse ToResponse(Doctor d)
-        => new(d.Id, d.Code, d.FullName, d.Specialty, d.Phone, d.Email, d.IsActive);
+        => new(d.Id, d.Code, d.FullName, d.Specialty, d.AcademicTitle, d.Phone, d.Email, d.IsActive);
 }

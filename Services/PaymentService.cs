@@ -15,9 +15,10 @@ public class PaymentService
 
     public async Task<PaymentResponse> CreateAsync(long visitId, PaymentCreateRequest req)
     {
-        // Validate visit exists
+        // Validate visit exists (include Doctor for fee lookup)
         var visit = await _db.Visits
             .Include(v => v.VisitServices)
+            .Include(v => v.Doctor)
             .FirstOrDefaultAsync(v => v.Id == visitId)
             ?? throw new ResourceNotFoundException($"Lan kham khong ton tai: {visitId}");
 
@@ -25,14 +26,36 @@ public class PaymentService
         if (await _db.Payments.AnyAsync(p => p.VisitId == visitId))
             throw new InvalidOperationException("Lan kham nay da duoc thanh toan.");
 
+        // Resolve ExaminationFee: use override if provided, else lookup from SystemConfig
+        decimal examinationFee;
+        if (req.ExaminationFee.HasValue)
+        {
+            examinationFee = req.ExaminationFee.Value;
+        }
+        else
+        {
+            var configKey = visit.Doctor.AcademicTitle switch
+            {
+                AcademicTitle.Professor           => "fee_professor",
+                AcademicTitle.AssociateProfessor  => "fee_associate_professor",
+                AcademicTitle.PhD_CKII            => "fee_phd_ckii",
+                AcademicTitle.Master_CKI          => "fee_master_cki",
+                _                                 => "examination_fee"
+            };
+            var config = await _db.SystemConfigs.FindAsync(configKey)
+                ?? await _db.SystemConfigs.FindAsync("examination_fee");
+            examinationFee = config != null && decimal.TryParse(config.ConfigValue, out var fee)
+                ? fee : 100000m;
+        }
+
         var serviceTotal = visit.VisitServices.Sum(vs => vs.UnitPrice * vs.Quantity);
-        var grandTotal   = req.ExaminationFee + serviceTotal;
+        var grandTotal   = examinationFee + serviceTotal;
         var finalAmount  = grandTotal - req.Discount;
 
         var payment = new Payment
         {
             VisitId        = visitId,
-            ExaminationFee = req.ExaminationFee,
+            ExaminationFee = examinationFee,
             ServiceTotal   = serviceTotal,
             GrandTotal     = grandTotal,
             Discount       = req.Discount,

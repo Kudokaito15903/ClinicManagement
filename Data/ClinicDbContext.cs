@@ -17,6 +17,7 @@ public class ClinicDbContext : DbContext
     public DbSet<VisitDiagnosis> VisitDiagnoses => Set<VisitDiagnosis>();
     public DbSet<VisitServiceItem> VisitServices => Set<VisitServiceItem>();
     public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<SystemConfig> SystemConfigs => Set<SystemConfig>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -47,6 +48,7 @@ public class ClinicDbContext : DbContext
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.FullName).HasColumnName("full_name").HasMaxLength(100).IsRequired();
             e.Property(x => x.Specialty).HasColumnName("specialty").HasMaxLength(100);
+            e.Property(x => x.AcademicTitle).HasColumnName("academic_title").HasMaxLength(30).HasConversion<string>().HasDefaultValue(AcademicTitle.None);
             e.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(15);
             e.Property(x => x.Email).HasColumnName("email").HasMaxLength(100);
             e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
@@ -188,6 +190,32 @@ public class ClinicDbContext : DbContext
             e.Property(x => x.CashierNote).HasColumnName("cashier_note").HasColumnType("TEXT");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.HasOne(x => x.Cashier).WithMany().HasForeignKey(x => x.CashierId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── SystemConfig ──────────────────────────────────────────────────
+        modelBuilder.Entity<SystemConfig>(e =>
+        {
+            e.ToTable("system_configs");
+            e.HasKey(x => x.ConfigKey);
+            e.Property(x => x.ConfigKey).HasColumnName("config_key").HasMaxLength(100).IsRequired();
+            e.Property(x => x.ConfigValue).HasColumnName("config_value").HasMaxLength(255).IsRequired();
+            e.Property(x => x.Description).HasColumnName("description").HasMaxLength(255);
+
+            // Seed default clinic configuration values
+            e.HasData(
+                new SystemConfig { ConfigKey = "clinic_name",        ConfigValue = "Phòng khám Đa khoa",         Description = "Tên phòng khám" },
+                new SystemConfig { ConfigKey = "clinic_address",     ConfigValue = "123 Đường ABC, Quận X, TP.HCM", Description = "Địa chỉ phòng khám" },
+                new SystemConfig { ConfigKey = "clinic_phone",       ConfigValue = "028 1234 5678",               Description = "Số điện thoại phòng khám" },
+                new SystemConfig { ConfigKey = "clinic_email",       ConfigValue = "",                            Description = "Email phòng khám" },
+                new SystemConfig { ConfigKey = "clinic_tax_code",    ConfigValue = "",                            Description = "Mã số thuế" },
+                new SystemConfig { ConfigKey = "examination_fee",          ConfigValue = "100000", Description = "Phí khám mặc định – bác sĩ thường (VNĐ)" },
+                new SystemConfig { ConfigKey = "fee_master_cki",            ConfigValue = "250000", Description = "Phí khám – Thạc sĩ / Bác sĩ chuyên khoa I (VNĐ)" },
+                new SystemConfig { ConfigKey = "fee_phd_ckii",              ConfigValue = "350000", Description = "Phí khám – Tiến sĩ / Bác sĩ chuyên khoa II (VNĐ)" },
+                new SystemConfig { ConfigKey = "fee_associate_professor",   ConfigValue = "450000", Description = "Phí khám – Phó Giáo sư (VNĐ)" },
+                new SystemConfig { ConfigKey = "fee_professor",             ConfigValue = "550000", Description = "Phí khám – Giáo sư (VNĐ)" },
+                new SystemConfig { ConfigKey = "currency",                 ConfigValue = "VND",    Description = "Đơn vị tiền tệ" },
+                new SystemConfig { ConfigKey = "receipt_footer",           ConfigValue = "Cảm ơn quý khách đã tin tưởng!", Description = "Chân trang phiếu thu" }
+            );
         });
     }
 

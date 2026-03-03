@@ -5,7 +5,8 @@ namespace ClinicManagement.DTOs.Requests;
 
 public record DoctorRequest(
     [Required] string FullName,
-    string? Specialty
+    string? Specialty,
+    AcademicTitle? AcademicTitle
 );
 
 public record RoomRequest(
@@ -71,7 +72,7 @@ public record VisitDiagnosisAddRequest(
 );
 
 public record PaymentCreateRequest(
-    [Required] decimal ExaminationFee,
+    decimal? ExaminationFee = null,         // null = tự tra từ SystemConfig theo trình độ bác sĩ
     decimal Discount = 0,
     PaymentMethod PaymentMethod = PaymentMethod.Cash,
     string? CashierNote = null
@@ -79,4 +80,8 @@ public record PaymentCreateRequest(
 
 public record VisitStatusUpdateRequest(
     [Required] VisitStatus Status
+);
+
+public record SystemConfigUpdateRequest(
+    [Required] string ConfigValue
 );

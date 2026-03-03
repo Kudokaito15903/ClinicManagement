@@ -23,6 +23,7 @@ builder.Services.AddScoped<VisitDiagnosisService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<SystemConfigService>();
 
 // ─── Controllers + JSON ────────────────────────────────────────────────────
 builder.Services.AddControllers()

@@ -4,7 +4,9 @@ namespace ClinicManagement.DTOs.Responses;
 
 public record RefResponse(long Id, string Name);
 
-public record DoctorResponse(long Id, string Code, string FullName, string? Specialty, string? Phone, string? Email, bool IsActive);
+public record SystemConfigResponse(string ConfigKey, string ConfigValue, string? Description);
+
+public record DoctorResponse(long Id, string Code, string FullName, string? Specialty, AcademicTitle? AcademicTitle, string? Phone, string? Email, bool IsActive);
 
 public record RoomResponse(long Id, string Code, string Name, string? Description, bool IsActive);
 

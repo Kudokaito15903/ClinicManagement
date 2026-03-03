@@ -1,0 +1,8 @@
+namespace ClinicManagement.Entities;
+
+public class SystemConfig
+{
+    public string ConfigKey { get; set; } = string.Empty;    // PRIMARY KEY
+    public string ConfigValue { get; set; } = string.Empty;
+    public string? Description { get; set; }
+}
