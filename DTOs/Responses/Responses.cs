@@ -8,7 +8,7 @@ public record SystemConfigResponse(string ConfigKey, string ConfigValue, string?
 
 public record DoctorResponse(long Id, string Code, string FullName, string? Specialty, AcademicTitle? AcademicTitle, string? Phone, string? Email, bool IsActive);
 
-public record RoomResponse(long Id, string Code, string Name, string? Description, bool IsActive);
+public record RoomResponse(long Id, string Code, string Name, string? Description);
 
 public record DiagnosisResponse(long Id, string IcdCode, string Name, string? Category, string? Description);
 
@@ -22,10 +22,7 @@ public record PatientResponse(
     Gender Gender,
     string? Phone,
     string? Address,
-    string? Note,
-    RefResponse? Doctor,
-    RefResponse? Room,
-    List<DiagnosisResponse>? Diagnoses
+    string? Note
 );
 
 public record VisitResponse(

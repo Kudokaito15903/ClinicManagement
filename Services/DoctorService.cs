@@ -22,13 +22,28 @@ public class DoctorService
     {
         var doctor = new Doctor
         {
+            Code          = await GenerateCodeAsync(),
             FullName      = req.FullName,
             Specialty     = req.Specialty,
-            AcademicTitle = req.AcademicTitle ?? AcademicTitle.None
+            AcademicTitle = req.AcademicTitle ?? AcademicTitle.None,
+            Phone         = req.Phone,
+            Email         = req.Email
         };
         _db.Doctors.Add(doctor);
         await _db.SaveChangesAsync();
         return ToResponse(doctor);
+    }
+
+    private async Task<string> GenerateCodeAsync()
+    {
+        long count = await _db.Doctors.LongCountAsync();
+        string candidate;
+        do
+        {
+            count++;
+            candidate = $"BS{count:D3}";
+        } while (await _db.Doctors.AnyAsync(d => d.Code == candidate));
+        return candidate;
     }
 
     public async Task<DoctorResponse> UpdateAsync(long id, DoctorRequest req)
@@ -37,6 +52,8 @@ public class DoctorService
         doctor.FullName      = req.FullName;
         doctor.Specialty     = req.Specialty;
         doctor.AcademicTitle = req.AcademicTitle ?? doctor.AcademicTitle;
+        doctor.Phone         = req.Phone;
+        doctor.Email         = req.Email;
         await _db.SaveChangesAsync();
         return ToResponse(doctor);
     }
@@ -44,7 +61,7 @@ public class DoctorService
     public async Task DeleteAsync(long id)
     {
         var doctor = await GetByIdAsync(id);
-        _db.Doctors.Remove(doctor);
+        doctor.IsActive = false;          // soft-delete: giữ lại lịch sử khám
         await _db.SaveChangesAsync();
     }
 

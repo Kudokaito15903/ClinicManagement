@@ -1,5 +1,6 @@
 using ClinicManagement.Data;
 using ClinicManagement.DTOs.Responses;
+using ClinicManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClinicManagement.Services;
@@ -86,12 +87,33 @@ public class ReportService
         var services = await _visitServiceService.FindByVisitIdAsync(visitId);
         var serviceTotal = services.Sum(s => s.Subtotal);
 
+        // Lấy phí khám thực tế nếu đã thanh toán, ngược lại lấy dự kiến từ SystemConfig
+        decimal examFee = 0;
+        if (visit.Payment != null)
+        {
+            examFee = visit.Payment.ExaminationFee;
+        }
+        else if (visit.Doctor != null)
+        {
+            var configKey = visit.Doctor.AcademicTitle switch
+            {
+                AcademicTitle.Professor          => "fee_professor",
+                AcademicTitle.AssociateProfessor => "fee_associate_professor",
+                AcademicTitle.PhD_CKII           => "fee_phd_ckii",
+                AcademicTitle.Master_CKI         => "fee_master_cki",
+                _                                => "examination_fee"
+            };
+            var config = await _db.SystemConfigs.FindAsync(configKey)
+                ?? await _db.SystemConfigs.FindAsync("examination_fee");
+            examFee = config != null && decimal.TryParse(config.ConfigValue, out var fee) ? fee : 100000m;
+        }
+
         return new VisitDetailResponse(
             await _visitService.ToResponseAsync(visit),
             services,
             serviceTotal,
-            visit.Payment?.ExaminationFee ?? 0,
-            serviceTotal + (visit.Payment?.ExaminationFee ?? 0)
+            examFee,
+            serviceTotal + examFee
         );
     }
 

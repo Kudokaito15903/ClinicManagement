@@ -14,7 +14,6 @@ public class Payment
 
     public decimal ExaminationFee { get; set; }                 // Phí khám cố định
     public decimal ServiceTotal { get; set; }                   // Tổng tiền dịch vụ (snapshot)
-    public decimal GrandTotal { get; set; }                     // Tổng trước giảm giá
     public decimal Discount { get; set; } = 0;
     public decimal FinalAmount { get; set; }                    // Số tiền thực thu
 

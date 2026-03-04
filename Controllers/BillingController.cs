@@ -3,6 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ClinicManagement.Controllers;
 
+/// <summary>
+/// APIs for bill and receipt generation.
+/// </summary>
 [ApiController]
 [Route("api/visits")]
 public class BillingController : ControllerBase
@@ -10,12 +13,22 @@ public class BillingController : ControllerBase
     private readonly BillingService _billingService;
     public BillingController(BillingService billingService) => _billingService = billingService;
 
-    /// <summary>Phiếu thu dạng JSON</summary>
+    /// <summary>
+    /// Get bill data in JSON format.
+    /// </summary>
+    /// <param name="visitId">Visit id.</param>
+    /// <response code="200">Returns bill data.</response>
+    /// <response code="404">Visit or payment information was not found.</response>
     [HttpGet("{visitId}/bill")]
     public async Task<IActionResult> GetBill(long visitId)
         => Ok(await _billingService.GetBillAsync(visitId));
 
-    /// <summary>Phiếu thu dạng HTML (có thể in trực tiếp từ trình duyệt)</summary>
+    /// <summary>
+    /// Get printable receipt in HTML format.
+    /// </summary>
+    /// <param name="visitId">Visit id.</param>
+    /// <response code="200">Returns HTML receipt content.</response>
+    /// <response code="404">Visit or payment information was not found.</response>
     [HttpGet("{visitId}/receipt")]
     public async Task<ContentResult> GetReceiptHtml(long visitId)
     {

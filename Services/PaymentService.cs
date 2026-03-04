@@ -24,7 +24,7 @@ public class PaymentService
 
         // Check if payment already exists
         if (await _db.Payments.AnyAsync(p => p.VisitId == visitId))
-            throw new InvalidOperationException("Lan kham nay da duoc thanh toan.");
+            throw new BadRequestException("Lan kham nay da duoc thanh toan.");
 
         // Resolve ExaminationFee: use override if provided, else lookup from SystemConfig
         decimal examinationFee;
@@ -57,7 +57,6 @@ public class PaymentService
             VisitId        = visitId,
             ExaminationFee = examinationFee,
             ServiceTotal   = serviceTotal,
-            GrandTotal     = grandTotal,
             Discount       = req.Discount,
             FinalAmount    = finalAmount,
             PaymentMethod  = req.PaymentMethod,
@@ -82,17 +81,21 @@ public class PaymentService
         return ToResponse(payment);
     }
 
-    public static PaymentResponse ToResponse(Payment p) => new(
-        p.Id,
-        p.VisitId,
-        p.ExaminationFee,
-        p.ServiceTotal,
-        p.GrandTotal,
-        p.Discount,
-        p.FinalAmount,
-        p.PaymentMethod.ToString(),
-        p.PaidAt,
-        p.CashierNote,
-        p.CreatedAt
-    );
+    public static PaymentResponse ToResponse(Payment p)
+    {
+        var grandTotal = p.FinalAmount + p.Discount;
+        return new PaymentResponse(
+            p.Id,
+            p.VisitId,
+            p.ExaminationFee,
+            p.ServiceTotal,
+            grandTotal,
+            p.Discount,
+            p.FinalAmount,
+            p.PaymentMethod.ToString(),
+            p.PaidAt,
+            p.CashierNote,
+            p.CreatedAt
+        );
+    }
 }

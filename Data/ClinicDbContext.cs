@@ -65,7 +65,6 @@ public class ClinicDbContext : DbContext
             e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
             e.Property(x => x.Description).HasColumnName("description").HasMaxLength(255);
-            e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
         });
 
         // ── Diagnosis ────────────────────────────────────────────────────
@@ -182,7 +181,6 @@ public class ClinicDbContext : DbContext
             e.Property(x => x.Id).UseIdentityColumn();
             e.Property(x => x.ExaminationFee).HasColumnName("examination_fee").HasColumnType("NUMERIC(15,2)").IsRequired();
             e.Property(x => x.ServiceTotal).HasColumnName("service_total").HasColumnType("NUMERIC(15,2)").IsRequired();
-            e.Property(x => x.GrandTotal).HasColumnName("grand_total").HasColumnType("NUMERIC(15,2)").IsRequired();
             e.Property(x => x.Discount).HasColumnName("discount").HasColumnType("NUMERIC(15,2)").HasDefaultValue(0);
             e.Property(x => x.FinalAmount).HasColumnName("final_amount").HasColumnType("NUMERIC(15,2)").IsRequired();
             e.Property(x => x.PaymentMethod).HasColumnName("payment_method").HasMaxLength(20).HasConversion<string>();

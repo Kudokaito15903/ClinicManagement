@@ -99,7 +99,6 @@ public class PatientService
     }
 
     public PatientResponse ToResponse(Patient p) => new(
-        p.Id, p.Code, p.FullName, p.DateOfBirth, p.Gender, p.Phone, p.Address, p.Note,
-        null, null, null
+        p.Id, p.Code, p.FullName, p.DateOfBirth, p.Gender, p.Phone, p.Address, p.Note
     );
 }

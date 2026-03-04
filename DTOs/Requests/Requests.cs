@@ -6,7 +6,9 @@ namespace ClinicManagement.DTOs.Requests;
 public record DoctorRequest(
     [Required] string FullName,
     string? Specialty,
-    AcademicTitle? AcademicTitle
+    AcademicTitle? AcademicTitle,
+    string? Phone,
+    [EmailAddress] string? Email
 );
 
 public record RoomRequest(
