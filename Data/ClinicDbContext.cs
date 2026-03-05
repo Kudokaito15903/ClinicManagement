@@ -18,6 +18,9 @@ public class ClinicDbContext : DbContext
     public DbSet<VisitServiceItem> VisitServices => Set<VisitServiceItem>();
     public DbSet<Payment> Payments => Set<Payment>();
     public DbSet<SystemConfig> SystemConfigs => Set<SystemConfig>();
+    public DbSet<Medicine> Medicines => Set<Medicine>();
+    public DbSet<Prescription> Prescriptions => Set<Prescription>();
+    public DbSet<PrescriptionItem> PrescriptionItems => Set<PrescriptionItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -32,10 +35,9 @@ public class ClinicDbContext : DbContext
             e.Property(x => x.PasswordHash).HasColumnName("password").HasMaxLength(255).IsRequired();
             e.Property(x => x.Role).HasColumnName("role").HasMaxLength(20).HasConversion<string>();
             e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
-            e.Property(x => x.DoctorId).HasColumnName("doctor_id");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
-            e.HasOne(x => x.Doctor).WithOne(d => d.User).HasForeignKey<User>(x => x.DoctorId).OnDelete(DeleteBehavior.SetNull);
+            // FK doctor_id đã chuyển sang bảng doctors.user_id — không còn ở đây
         });
 
         // ── Doctor ──────────────────────────────────────────────────────
@@ -53,6 +55,11 @@ public class ClinicDbContext : DbContext
             e.Property(x => x.Email).HasColumnName("email").HasMaxLength(100);
             e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.UserId).HasColumnName("user_id");             // FK → users (đúng chiều)
+            e.HasIndex(x => x.UserId).IsUnique().HasDatabaseName("uq_doctors_user_id");
+            e.HasOne(x => x.User).WithOne()
+                .HasForeignKey<Doctor>(x => x.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         // ── Room ─────────────────────────────────────────────────────────
@@ -187,7 +194,58 @@ public class ClinicDbContext : DbContext
             e.Property(x => x.PaidAt).HasColumnName("paid_at");
             e.Property(x => x.CashierNote).HasColumnName("cashier_note").HasColumnType("TEXT");
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
-            e.HasOne(x => x.Cashier).WithMany().HasForeignKey(x => x.CashierId).OnDelete(DeleteBehavior.SetNull);
+            e.Property(x => x.CashierUserId).HasColumnName("cashier_user_id");  // FK tường minh
+            e.HasOne(x => x.Cashier).WithMany().HasForeignKey(x => x.CashierUserId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── Medicine ─────────────────────────────────────────────────────
+        modelBuilder.Entity<Medicine>(e =>
+        {
+            e.ToTable("medicines");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(20).IsRequired();
+            e.HasIndex(x => x.Code).IsUnique();
+            e.Property(x => x.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+            e.Property(x => x.Ingredient).HasColumnName("ingredient").HasColumnType("TEXT");
+            e.Property(x => x.DosageForm).HasColumnName("dosage_form").HasMaxLength(50);
+            e.Property(x => x.Unit).HasColumnName("unit").HasMaxLength(30).IsRequired();
+            e.Property(x => x.Manufacturer).HasColumnName("manufacturer").HasMaxLength(100);
+            e.Property(x => x.CountryOfOrigin).HasColumnName("country_of_origin").HasMaxLength(50);
+            e.Property(x => x.UnitPrice).HasColumnName("unit_price").HasColumnType("NUMERIC(15,2)").IsRequired();
+            e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        // ── Prescription ─────────────────────────────────────────────────
+        modelBuilder.Entity<Prescription>(e =>
+        {
+            e.ToTable("prescriptions");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.Note).HasColumnName("note").HasColumnType("TEXT");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.HasOne(x => x.Visit).WithOne(v => v.Prescription)
+                .HasForeignKey<Prescription>(x => x.VisitId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── PrescriptionItem ──────────────────────────────────────────────
+        modelBuilder.Entity<PrescriptionItem>(e =>
+        {
+            e.ToTable("prescription_items");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.Quantity).HasColumnName("quantity").HasDefaultValue(1).IsRequired();
+            e.Property(x => x.UnitPrice).HasColumnName("unit_price").HasColumnType("NUMERIC(15,2)").IsRequired();
+            e.Property(x => x.DosageInstruction).HasColumnName("dosage_instruction").HasMaxLength(255);
+            e.Property(x => x.Note).HasColumnName("note").HasMaxLength(255);
+            e.HasIndex(x => new { x.PrescriptionId, x.MedicineId })
+                .IsUnique().HasDatabaseName("uq_prescription_medicine");
+            e.HasOne(x => x.Prescription).WithMany(p => p.Items)
+                .HasForeignKey(x => x.PrescriptionId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Medicine).WithMany(m => m.PrescriptionItems)
+                .HasForeignKey(x => x.MedicineId).OnDelete(DeleteBehavior.Restrict);
         });
 
         // ── SystemConfig ──────────────────────────────────────────────────
@@ -243,6 +301,8 @@ public class ClinicDbContext : DbContext
                 else if (entry.Entity is Visit v)            { v.CreatedAt = now; v.UpdatedAt = now; }
                 else if (entry.Entity is VisitServiceItem vs){ vs.CreatedAt = now; }
                 else if (entry.Entity is Payment pay)        { pay.CreatedAt = now; }
+                else if (entry.Entity is Medicine med)       { med.CreatedAt = now; }
+                else if (entry.Entity is Prescription prx)   { prx.CreatedAt = now; }
             }
             else if (entry.State == EntityState.Modified)
             {

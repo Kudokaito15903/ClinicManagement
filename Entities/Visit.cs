@@ -35,4 +35,5 @@ public class Visit
     public ICollection<VisitDiagnosis> VisitDiagnoses { get; set; } = new List<VisitDiagnosis>();
     public ICollection<VisitServiceItem> VisitServices { get; set; } = new List<VisitServiceItem>();
     public Payment? Payment { get; set; }
+    public Prescription? Prescription { get; set; }
 }

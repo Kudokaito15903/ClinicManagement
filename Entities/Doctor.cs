@@ -21,8 +21,10 @@ public class Doctor
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
 
+    public long? UserId { get; set; }                           // NULL nếu chưa có tài khoản
+
     // Navigation
-    public ICollection<Visit> Visits { get; set; } = new List<Visit>();
     public User? User { get; set; }
+    public ICollection<Visit> Visits { get; set; } = new List<Visit>();
 }
  

@@ -13,7 +13,7 @@ public class VisitDiagnosisService
 
     public VisitDiagnosisService(ClinicDbContext db) => _db = db;
 
-    public async Task<List<DiagnosisResponse>> GetByVisitIdAsync(long visitId)
+    public async Task<List<VisitDiagnosisResponse>> GetByVisitIdAsync(long visitId)
     {
         var list = await _db.VisitDiagnoses
             .Include(vd => vd.Diagnosis)
@@ -21,10 +21,13 @@ public class VisitDiagnosisService
             .OrderByDescending(vd => vd.IsPrimary)
             .ToListAsync();
 
-        return list.Select(vd => DiagnosisService.ToResponse(vd.Diagnosis)).ToList();
+        return list.Select(vd => new VisitDiagnosisResponse(
+            vd.Diagnosis.Id, vd.Diagnosis.IcdCode, vd.Diagnosis.Name,
+            vd.Diagnosis.Category, vd.Diagnosis.Description,
+            vd.IsPrimary, vd.Note)).ToList();
     }
 
-    public async Task<DiagnosisResponse> AddAsync(long visitId, VisitDiagnosisAddRequest req)
+    public async Task<VisitDiagnosisResponse> AddAsync(long visitId, VisitDiagnosisAddRequest req)
     {
         // Validate visit exists
         var visitExists = await _db.Visits.AnyAsync(v => v.Id == visitId);
@@ -61,7 +64,10 @@ public class VisitDiagnosisService
         _db.VisitDiagnoses.Add(vd);
         await _db.SaveChangesAsync();
 
-        return DiagnosisService.ToResponse(diagnosis);
+        return new VisitDiagnosisResponse(
+            diagnosis.Id, diagnosis.IcdCode, diagnosis.Name,
+            diagnosis.Category, diagnosis.Description,
+            vd.IsPrimary, vd.Note);
     }
 
     public async Task RemoveAsync(long visitId, long diagnosisId)

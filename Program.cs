@@ -23,6 +23,8 @@ builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<SystemConfigService>();
+builder.Services.AddScoped<MedicineService>();
+builder.Services.AddScoped<PrescriptionService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

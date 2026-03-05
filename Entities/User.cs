@@ -16,9 +16,6 @@ public class User
     public UserRole Role { get; set; }
     public bool IsActive { get; set; } = true;
 
-    public long? DoctorId { get; set; }                         // NULL nếu không phải bác sĩ
-    public Doctor? Doctor { get; set; }
-
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

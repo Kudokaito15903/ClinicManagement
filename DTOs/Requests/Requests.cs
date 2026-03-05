@@ -87,3 +87,49 @@ public record VisitStatusUpdateRequest(
 public record SystemConfigUpdateRequest(
     [Required] string ConfigValue
 );
+
+// ── Medicine ─────────────────────────────────────────────────────────────────
+public record MedicineCreateRequest(
+    [Required] string Code,
+    [Required] string Name,
+    [Required] string Unit,
+    [Required][Range(0, double.MaxValue)] decimal UnitPrice,
+    string? Ingredient,
+    string? DosageForm,
+    string? Manufacturer,
+    string? CountryOfOrigin
+);
+
+public record MedicineUpdateRequest(
+    [Required] string Name,
+    [Required] string Unit,
+    [Required][Range(0, double.MaxValue)] decimal UnitPrice,
+    string? Ingredient,
+    string? DosageForm,
+    string? Manufacturer,
+    string? CountryOfOrigin
+);
+
+// ── Prescription ──────────────────────────────────────────────────────────────
+public record PrescriptionCreateRequest(
+    string? Note
+);
+
+public record PrescriptionUpdateRequest(
+    string? Note
+);
+
+public record PrescriptionItemAddRequest(
+    [Required] long MedicineId,
+    [Required][Range(1, int.MaxValue)] int Quantity,
+    [Required][Range(0, double.MaxValue)] decimal UnitPrice,
+    string? DosageInstruction,
+    string? Note
+);
+
+public record PrescriptionItemUpdateRequest(
+    [Required][Range(1, int.MaxValue)] int Quantity,
+    [Required][Range(0, double.MaxValue)] decimal UnitPrice,
+    string? DosageInstruction,
+    string? Note
+);

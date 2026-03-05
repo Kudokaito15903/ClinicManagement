@@ -12,6 +12,8 @@ public record RoomResponse(long Id, string Code, string Name, string? Descriptio
 
 public record DiagnosisResponse(long Id, string IcdCode, string Name, string? Category, string? Description);
 
+public record VisitDiagnosisResponse(long Id, string IcdCode, string Name, string? Category, string? Description, bool IsPrimary, string? Note);
+
 public record MedicalServiceResponse(long Id, string Code, string Name, string Unit, decimal Price, string? Category, bool IsActive);
 
 public record PatientResponse(
@@ -35,7 +37,7 @@ public record VisitResponse(
     string? Reason,
     string? Conclusion,
     string Status,
-    List<DiagnosisResponse>? Diagnoses
+    List<VisitDiagnosisResponse>? Diagnoses
 );
 
 public record PaymentResponse(
@@ -134,4 +136,42 @@ public record StatisticsResponse(
     decimal RevenueToday,
     decimal RevenueMonth,
     decimal RevenueTotal
+);
+
+// ── Medicine ─────────────────────────────────────────────────────────────────
+public record MedicineResponse(
+    long Id,
+    string Code,
+    string Name,
+    string? Ingredient,
+    string? DosageForm,
+    string Unit,
+    string? Manufacturer,
+    string? CountryOfOrigin,
+    decimal UnitPrice,
+    bool IsActive,
+    DateTime CreatedAt
+);
+
+// ── Prescription ─────────────────────────────────────────────────────────────
+public record PrescriptionItemResponse(
+    long Id,
+    long MedicineId,
+    string MedicineCode,
+    string MedicineName,
+    string? DosageForm,
+    string Unit,
+    int Quantity,
+    decimal UnitPrice,
+    decimal Subtotal,
+    string? DosageInstruction,
+    string? Note
+);
+
+public record PrescriptionResponse(
+    long Id,
+    long VisitId,
+    string? Note,
+    DateTime CreatedAt,
+    List<PrescriptionItemResponse> Items
 );

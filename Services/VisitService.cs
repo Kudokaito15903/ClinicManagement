@@ -154,6 +154,9 @@ public class VisitService
         v.Reason,
         v.Conclusion,
         v.Status.ToString(),
-        v.VisitDiagnoses.Select(vd => DiagnosisService.ToResponse(vd.Diagnosis)).ToList()
+        v.VisitDiagnoses.Select(vd => new VisitDiagnosisResponse(
+            vd.Diagnosis.Id, vd.Diagnosis.IcdCode, vd.Diagnosis.Name,
+            vd.Diagnosis.Category, vd.Diagnosis.Description,
+            vd.IsPrimary, vd.Note)).ToList()
     );
 }

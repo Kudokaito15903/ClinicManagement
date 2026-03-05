@@ -9,7 +9,7 @@ public class Payment
     public long VisitId { get; set; }                           // 1 Visit = 1 Payment
     public Visit Visit { get; set; } = null!;
 
-    public long? CashierId { get; set; }                        // Nhân viên thu ngân
+    public long? CashierUserId { get; set; }                    // Nhân viên thu ngân (FK tường minh)
     public User? Cashier { get; set; }
 
     public decimal ExaminationFee { get; set; }                 // Phí khám cố định
