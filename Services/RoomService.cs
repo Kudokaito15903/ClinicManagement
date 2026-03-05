@@ -20,10 +20,27 @@ public class RoomService
 
     public async Task<RoomResponse> CreateAsync(RoomRequest req)
     {
-        var room = new Room { Name = req.Name, Description = req.Description };
+        var room = new Room
+        {
+            Code = await GenerateCodeAsync(),
+            Name = req.Name,
+            Description = req.Description
+        };
         _db.Rooms.Add(room);
         await _db.SaveChangesAsync();
         return ToResponse(room);
+    }
+
+    private async Task<string> GenerateCodeAsync()
+    {
+        long count = await _db.Rooms.LongCountAsync();
+        string candidate;
+        do
+        {
+            count++;
+            candidate = $"PK{count:D3}";
+        } while (await _db.Rooms.AnyAsync(r => r.Code == candidate));
+        return candidate;
     }
 
     public async Task<RoomResponse> UpdateAsync(long id, RoomRequest req)
@@ -47,5 +64,5 @@ public class RoomService
            ?? throw new ResourceNotFoundException($"Phong khong ton tai: {id}");
 
     public static RoomResponse ToResponse(Room r)
-        => new(r.Id, r.Name, r.Description);
+        => new(r.Id, r.Code, r.Name, r.Description);
 }

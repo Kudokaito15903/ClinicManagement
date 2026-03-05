@@ -4,35 +4,64 @@ namespace ClinicManagement.DTOs.Responses;
 
 public record RefResponse(long Id, string Name);
 
-public record DoctorResponse(long Id, string FullName, string? Specialty);
+public record SystemConfigResponse(string ConfigKey, string ConfigValue, string? Description);
 
-public record RoomResponse(long Id, string Name, string? Description);
+public record DoctorResponse(long Id, string Code, string FullName, string? Specialty, AcademicTitle? AcademicTitle, string? Phone, string? Email, bool IsActive);
 
-public record DiagnosisResponse(long Id, string Code, string Name, string? Description);
+public record RoomResponse(long Id, string Code, string Name, string? Description);
 
-public record MedicalServiceResponse(long Id, string Code, string Name, decimal Price);
+public record DiagnosisResponse(long Id, string IcdCode, string Name, string? Category, string? Description);
+
+public record VisitDiagnosisResponse(long Id, string IcdCode, string Name, string? Category, string? Description, bool IsPrimary, string? Note);
+
+public record MedicalServiceResponse(long Id, string Code, string Name, string Unit, decimal Price, string? Category, bool IsActive);
 
 public record PatientResponse(
     long Id,
     string Code,
     string FullName,
-    int? BirthYear,
-    Gender? Gender,
+    DateOnly DateOfBirth,
+    Gender Gender,
+    string? Phone,
     string? Address,
-    RefResponse? Doctor,
-    RefResponse? Room,
-    RefResponse? Diagnosis
+    string? Note
 );
 
 public record VisitResponse(
     long Id,
+    string Code,
     PatientResponse? Patient,
     RefResponse? Doctor,
     RefResponse? Room,
-    RefResponse? Diagnosis,
     DateTime VisitDate,
+    string? Reason,
+    string? Conclusion,
+    string Status,
+    List<VisitDiagnosisResponse>? Diagnoses
+);
+
+public record PaymentResponse(
+    long Id,
+    long VisitId,
     decimal ExaminationFee,
-    string? Notes
+    decimal ServiceTotal,
+    decimal GrandTotal,
+    decimal Discount,
+    decimal FinalAmount,
+    string PaymentMethod,
+    DateTime? PaidAt,
+    string? CashierNote,
+    DateTime CreatedAt
+);
+
+public record VisitListItemResponse(
+    long Id,
+    string Code,
+    string PatientName,
+    string? DoctorName,
+    string? RoomName,
+    DateTime VisitDate,
+    string Status
 );
 
 public record VisitSummaryResponse(
@@ -107,4 +136,39 @@ public record StatisticsResponse(
     decimal RevenueToday,
     decimal RevenueMonth,
     decimal RevenueTotal
+);
+
+// ── Medicine ─────────────────────────────────────────────────────────────────
+public record MedicineResponse(
+    long Id,
+    string Code,
+    string Name,
+    string? Ingredient,
+    string? DosageForm,
+    string Unit,
+    string? Manufacturer,
+    string? CountryOfOrigin,
+    bool IsActive,
+    DateTime CreatedAt
+);
+
+// ── Prescription ─────────────────────────────────────────────────────────────
+public record PrescriptionItemResponse(
+    long Id,
+    long MedicineId,
+    string MedicineCode,
+    string MedicineName,
+    string? DosageForm,
+    string Unit,
+    int Quantity,
+    string? DosageInstruction,
+    string? Note
+);
+
+public record PrescriptionResponse(
+    long Id,
+    long VisitId,
+    string? Note,
+    DateTime CreatedAt,
+    List<PrescriptionItemResponse> Items
 );

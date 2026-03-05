@@ -3,15 +3,14 @@ using ClinicManagement.Middleware;
 using ClinicManagement.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ─── Database ──────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<ClinicDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 
-// ─── Services ──────────────────────────────────────────────────────────────
 builder.Services.AddScoped<DoctorService>();
 builder.Services.AddScoped<RoomService>();
 builder.Services.AddScoped<DiagnosisService>();
@@ -19,10 +18,14 @@ builder.Services.AddScoped<MedicalServiceService>();
 builder.Services.AddScoped<PatientService>();
 builder.Services.AddScoped<VisitService>();
 builder.Services.AddScoped<VisitServiceService>();
+builder.Services.AddScoped<VisitDiagnosisService>();
+builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<BillingService>();
 builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<SystemConfigService>();
+builder.Services.AddScoped<MedicineService>();
+builder.Services.AddScoped<PrescriptionService>();
 
-// ─── Controllers + JSON ────────────────────────────────────────────────────
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -30,7 +33,6 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-// ─── Swagger ───────────────────────────────────────────────────────────────
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -38,16 +40,21 @@ builder.Services.AddSwaggerGen(c =>
     {
         Title = "Clinic Management API",
         Version = "v1",
-        Description = "REST API quản lý phòng khám - chuyển đổi từ Spring Boot sang .NET Core"
+        Description = "REST API for clinic management"
     });
+
+    var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+    if (File.Exists(xmlPath))
+    {
+        c.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+    }
 });
 
 var app = builder.Build();
 
-// ─── Middleware ─────────────────────────────────────────────────────────────
 app.UseMiddleware<GlobalExceptionHandler>();
 
-// ─── Swagger UI ─────────────────────────────────────────────────────────────
 app.UseSwagger(c => c.RouteTemplate = "api-docs/{documentName}/swagger.json");
 app.UseSwaggerUI(c =>
 {
@@ -57,7 +64,6 @@ app.UseSwaggerUI(c =>
 
 app.MapControllers();
 
-// ─── Auto Migrate + Seed ────────────────────────────────────────────────────
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ClinicDbContext>();

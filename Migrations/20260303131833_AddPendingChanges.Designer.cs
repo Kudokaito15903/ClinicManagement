@@ -3,6 +3,7 @@ using System;
 using ClinicManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ClinicManagement.Migrations
 {
     [DbContext(typeof(ClinicDbContext))]
-    partial class ClinicDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260303131833_AddPendingChanges")]
+    partial class AddPendingChanges
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -67,14 +70,6 @@ namespace ClinicManagement.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("AcademicTitle")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasDefaultValue("None")
-                        .HasColumnName("academic_title");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -112,18 +107,10 @@ namespace ClinicManagement.Migrations
                         .HasColumnType("character varying(100)")
                         .HasColumnName("specialty");
 
-                    b.Property<long?>("UserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("user_id");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Code")
                         .IsUnique();
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasDatabaseName("uq_doctors_user_id");
 
                     b.ToTable("doctors", (string)null);
                 });
@@ -185,69 +172,6 @@ namespace ClinicManagement.Migrations
                         .IsUnique();
 
                     b.ToTable("services", (string)null);
-                });
-
-            modelBuilder.Entity("ClinicManagement.Entities.Medicine", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("code");
-
-                    b.Property<string>("CountryOfOrigin")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("country_of_origin");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("DosageForm")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("dosage_form");
-
-                    b.Property<string>("Ingredient")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("ingredient");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true)
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("Manufacturer")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("manufacturer");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
-                        .HasColumnName("name");
-
-                    b.Property<string>("Unit")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("character varying(30)")
-                        .HasColumnName("unit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.ToTable("medicines", (string)null);
                 });
 
             modelBuilder.Entity("ClinicManagement.Entities.Patient", b =>
@@ -326,13 +250,12 @@ namespace ClinicManagement.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<long?>("CashierId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("CashierNote")
                         .HasColumnType("TEXT")
                         .HasColumnName("cashier_note");
-
-                    b.Property<long?>("CashierUserId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("cashier_user_id");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -351,6 +274,10 @@ namespace ClinicManagement.Migrations
                     b.Property<decimal>("FinalAmount")
                         .HasColumnType("NUMERIC(15,2)")
                         .HasColumnName("final_amount");
+
+                    b.Property<decimal>("GrandTotal")
+                        .HasColumnType("NUMERIC(15,2)")
+                        .HasColumnName("grand_total");
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone")
@@ -371,80 +298,12 @@ namespace ClinicManagement.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CashierUserId");
+                    b.HasIndex("CashierId");
 
                     b.HasIndex("VisitId")
                         .IsUnique();
 
                     b.ToTable("payments", (string)null);
-                });
-
-            modelBuilder.Entity("ClinicManagement.Entities.Prescription", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("TEXT")
-                        .HasColumnName("note");
-
-                    b.Property<long>("VisitId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("VisitId")
-                        .IsUnique();
-
-                    b.ToTable("prescriptions", (string)null);
-                });
-
-            modelBuilder.Entity("ClinicManagement.Entities.PrescriptionItem", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("DosageInstruction")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("dosage_instruction");
-
-                    b.Property<long>("MedicineId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("note");
-
-                    b.Property<long>("PrescriptionId")
-                        .HasColumnType("bigint");
-
-                    b.Property<int>("Quantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(1)
-                        .HasColumnName("quantity");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MedicineId");
-
-                    b.HasIndex("PrescriptionId", "MedicineId")
-                        .IsUnique()
-                        .HasDatabaseName("uq_prescription_medicine");
-
-                    b.ToTable("prescription_items", (string)null);
                 });
 
             modelBuilder.Entity("ClinicManagement.Entities.Room", b =>
@@ -466,6 +325,12 @@ namespace ClinicManagement.Migrations
                         .HasColumnType("character varying(255)")
                         .HasColumnName("description");
 
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -480,103 +345,6 @@ namespace ClinicManagement.Migrations
                     b.ToTable("rooms", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicManagement.Entities.SystemConfig", b =>
-                {
-                    b.Property<string>("ConfigKey")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("config_key");
-
-                    b.Property<string>("ConfigValue")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("config_value");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("description");
-
-                    b.HasKey("ConfigKey");
-
-                    b.ToTable("system_configs", (string)null);
-
-                    b.HasData(
-                        new
-                        {
-                            ConfigKey = "clinic_name",
-                            ConfigValue = "Phòng khám Đa khoa",
-                            Description = "Tên phòng khám"
-                        },
-                        new
-                        {
-                            ConfigKey = "clinic_address",
-                            ConfigValue = "123 Đường ABC, Quận X, TP.HCM",
-                            Description = "Địa chỉ phòng khám"
-                        },
-                        new
-                        {
-                            ConfigKey = "clinic_phone",
-                            ConfigValue = "028 1234 5678",
-                            Description = "Số điện thoại phòng khám"
-                        },
-                        new
-                        {
-                            ConfigKey = "clinic_email",
-                            ConfigValue = "",
-                            Description = "Email phòng khám"
-                        },
-                        new
-                        {
-                            ConfigKey = "clinic_tax_code",
-                            ConfigValue = "",
-                            Description = "Mã số thuế"
-                        },
-                        new
-                        {
-                            ConfigKey = "examination_fee",
-                            ConfigValue = "100000",
-                            Description = "Phí khám mặc định – bác sĩ thường (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "fee_master_cki",
-                            ConfigValue = "250000",
-                            Description = "Phí khám – Thạc sĩ / Bác sĩ chuyên khoa I (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "fee_phd_ckii",
-                            ConfigValue = "350000",
-                            Description = "Phí khám – Tiến sĩ / Bác sĩ chuyên khoa II (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "fee_associate_professor",
-                            ConfigValue = "450000",
-                            Description = "Phí khám – Phó Giáo sư (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "fee_professor",
-                            ConfigValue = "550000",
-                            Description = "Phí khám – Giáo sư (VNĐ)"
-                        },
-                        new
-                        {
-                            ConfigKey = "currency",
-                            ConfigValue = "VND",
-                            Description = "Đơn vị tiền tệ"
-                        },
-                        new
-                        {
-                            ConfigKey = "receipt_footer",
-                            ConfigValue = "Cảm ơn quý khách đã tin tưởng!",
-                            Description = "Chân trang phiếu thu"
-                        });
-                });
-
             modelBuilder.Entity("ClinicManagement.Entities.User", b =>
                 {
                     b.Property<long>("Id")
@@ -588,6 +356,10 @@ namespace ClinicManagement.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<long?>("DoctorId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("doctor_id");
 
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
@@ -618,6 +390,9 @@ namespace ClinicManagement.Migrations
                         .HasColumnName("username");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("DoctorId")
+                        .IsUnique();
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -772,21 +547,11 @@ namespace ClinicManagement.Migrations
                     b.ToTable("visit_services", (string)null);
                 });
 
-            modelBuilder.Entity("ClinicManagement.Entities.Doctor", b =>
-                {
-                    b.HasOne("ClinicManagement.Entities.User", "User")
-                        .WithOne()
-                        .HasForeignKey("ClinicManagement.Entities.Doctor", "UserId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("ClinicManagement.Entities.Payment", b =>
                 {
                     b.HasOne("ClinicManagement.Entities.User", "Cashier")
                         .WithMany()
-                        .HasForeignKey("CashierUserId")
+                        .HasForeignKey("CashierId")
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ClinicManagement.Entities.Visit", "Visit")
@@ -800,34 +565,14 @@ namespace ClinicManagement.Migrations
                     b.Navigation("Visit");
                 });
 
-            modelBuilder.Entity("ClinicManagement.Entities.Prescription", b =>
+            modelBuilder.Entity("ClinicManagement.Entities.User", b =>
                 {
-                    b.HasOne("ClinicManagement.Entities.Visit", "Visit")
-                        .WithOne("Prescription")
-                        .HasForeignKey("ClinicManagement.Entities.Prescription", "VisitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("ClinicManagement.Entities.Doctor", "Doctor")
+                        .WithOne("User")
+                        .HasForeignKey("ClinicManagement.Entities.User", "DoctorId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("Visit");
-                });
-
-            modelBuilder.Entity("ClinicManagement.Entities.PrescriptionItem", b =>
-                {
-                    b.HasOne("ClinicManagement.Entities.Medicine", "Medicine")
-                        .WithMany("PrescriptionItems")
-                        .HasForeignKey("MedicineId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("ClinicManagement.Entities.Prescription", "Prescription")
-                        .WithMany("Items")
-                        .HasForeignKey("PrescriptionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Medicine");
-
-                    b.Navigation("Prescription");
+                    b.Navigation("Doctor");
                 });
 
             modelBuilder.Entity("ClinicManagement.Entities.Visit", b =>
@@ -902,6 +647,8 @@ namespace ClinicManagement.Migrations
 
             modelBuilder.Entity("ClinicManagement.Entities.Doctor", b =>
                 {
+                    b.Navigation("User");
+
                     b.Navigation("Visits");
                 });
 
@@ -910,19 +657,9 @@ namespace ClinicManagement.Migrations
                     b.Navigation("VisitServiceItems");
                 });
 
-            modelBuilder.Entity("ClinicManagement.Entities.Medicine", b =>
-                {
-                    b.Navigation("PrescriptionItems");
-                });
-
             modelBuilder.Entity("ClinicManagement.Entities.Patient", b =>
                 {
                     b.Navigation("Visits");
-                });
-
-            modelBuilder.Entity("ClinicManagement.Entities.Prescription", b =>
-                {
-                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("ClinicManagement.Entities.Room", b =>
@@ -933,8 +670,6 @@ namespace ClinicManagement.Migrations
             modelBuilder.Entity("ClinicManagement.Entities.Visit", b =>
                 {
                     b.Navigation("Payment");
-
-                    b.Navigation("Prescription");
 
                     b.Navigation("VisitDiagnoses");
 

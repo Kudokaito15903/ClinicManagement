@@ -7,123 +7,271 @@ public class ClinicDbContext : DbContext
 {
     public ClinicDbContext(DbContextOptions<ClinicDbContext> options) : base(options) { }
 
+    public DbSet<User> Users => Set<User>();
     public DbSet<Doctor> Doctors => Set<Doctor>();
     public DbSet<Room> Rooms => Set<Room>();
     public DbSet<Diagnosis> Diagnoses => Set<Diagnosis>();
     public DbSet<MedicalService> MedicalServices => Set<MedicalService>();
     public DbSet<Patient> Patients => Set<Patient>();
     public DbSet<Visit> Visits => Set<Visit>();
+    public DbSet<VisitDiagnosis> VisitDiagnoses => Set<VisitDiagnosis>();
     public DbSet<VisitServiceItem> VisitServices => Set<VisitServiceItem>();
+    public DbSet<Payment> Payments => Set<Payment>();
+    public DbSet<SystemConfig> SystemConfigs => Set<SystemConfig>();
+    public DbSet<Medicine> Medicines => Set<Medicine>();
+    public DbSet<Prescription> Prescriptions => Set<Prescription>();
+    public DbSet<PrescriptionItem> PrescriptionItems => Set<PrescriptionItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        // Doctor
+        // ── User ────────────────────────────────────────────────────────
+        modelBuilder.Entity<User>(e =>
+        {
+            e.ToTable("users");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.Username).HasColumnName("username").HasMaxLength(50).IsRequired();
+            e.HasIndex(x => x.Username).IsUnique();
+            e.Property(x => x.PasswordHash).HasColumnName("password").HasMaxLength(255).IsRequired();
+            e.Property(x => x.Role).HasColumnName("role").HasMaxLength(20).HasConversion<string>();
+            e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            // FK doctor_id đã chuyển sang bảng doctors.user_id — không còn ở đây
+        });
+
+        // ── Doctor ──────────────────────────────────────────────────────
         modelBuilder.Entity<Doctor>(e =>
         {
             e.ToTable("doctors");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
-            e.Property(x => x.FullName).HasColumnName("full_name").HasMaxLength(255).IsRequired();
-            e.Property(x => x.Specialty).HasColumnName("specialty").HasMaxLength(255);
+            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(20).IsRequired();
+            e.HasIndex(x => x.Code).IsUnique();
+            e.Property(x => x.FullName).HasColumnName("full_name").HasMaxLength(100).IsRequired();
+            e.Property(x => x.Specialty).HasColumnName("specialty").HasMaxLength(100);
+            e.Property(x => x.AcademicTitle).HasColumnName("academic_title").HasMaxLength(30).HasConversion<string>().HasDefaultValue(AcademicTitle.None);
+            e.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(15);
+            e.Property(x => x.Email).HasColumnName("email").HasMaxLength(100);
+            e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
-            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            e.Property(x => x.UserId).HasColumnName("user_id");             // FK → users (đúng chiều)
+            e.HasIndex(x => x.UserId).IsUnique().HasDatabaseName("uq_doctors_user_id");
+            e.HasOne(x => x.User).WithOne()
+                .HasForeignKey<Doctor>(x => x.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
-        // Room
+        // ── Room ─────────────────────────────────────────────────────────
         modelBuilder.Entity<Room>(e =>
         {
             e.ToTable("rooms");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
-            e.Property(x => x.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
-            e.Property(x => x.Description).HasColumnName("description");
-            e.Property(x => x.CreatedAt).HasColumnName("created_at");
-            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
+            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(20).IsRequired();
+            e.HasIndex(x => x.Code).IsUnique();
+            e.Property(x => x.Name).HasColumnName("name").HasMaxLength(100).IsRequired();
+            e.Property(x => x.Description).HasColumnName("description").HasMaxLength(255);
         });
 
-        // Diagnosis
+        // ── Diagnosis ────────────────────────────────────────────────────
         modelBuilder.Entity<Diagnosis>(e =>
         {
             e.ToTable("diagnoses");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
-            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(50).IsRequired();
-            e.HasIndex(x => x.Code).IsUnique();
+            e.Property(x => x.IcdCode).HasColumnName("icd_code").HasMaxLength(20).IsRequired();
+            e.HasIndex(x => x.IcdCode).IsUnique();
             e.Property(x => x.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
+            e.Property(x => x.Category).HasColumnName("category").HasMaxLength(100);
             e.Property(x => x.Description).HasColumnName("description").HasColumnType("TEXT");
-            e.Property(x => x.CreatedAt).HasColumnName("created_at");
-            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });
 
-        // MedicalService
+        // ── MedicalService ───────────────────────────────────────────────
         modelBuilder.Entity<MedicalService>(e =>
         {
-            e.ToTable("medical_services");
+            e.ToTable("services");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
-            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(50).IsRequired();
+            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(20).IsRequired();
             e.HasIndex(x => x.Code).IsUnique();
-            e.Property(x => x.Name).HasColumnName("name").HasMaxLength(255).IsRequired();
+            e.Property(x => x.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+            e.Property(x => x.Unit).HasColumnName("unit").HasMaxLength(50).HasDefaultValue("lần");
             e.Property(x => x.Price).HasColumnName("price").HasColumnType("NUMERIC(15,2)").IsRequired();
+            e.Property(x => x.Category).HasColumnName("category").HasMaxLength(100);
+            e.Property(x => x.Description).HasColumnName("description").HasColumnType("TEXT");
+            e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
-            e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
         });
 
-        // Patient
+        // ── Patient ──────────────────────────────────────────────────────
         modelBuilder.Entity<Patient>(e =>
         {
             e.ToTable("patients");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
-            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(50).IsRequired();
+            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(20).IsRequired();
             e.HasIndex(x => x.Code).IsUnique();
-            e.Property(x => x.FullName).HasColumnName("full_name").HasMaxLength(255).IsRequired();
-            e.Property(x => x.BirthYear).HasColumnName("birth_year");
-            e.Property(x => x.Gender).HasColumnName("gender").HasMaxLength(10)
-             .HasConversion<string>();
+            e.Property(x => x.FullName).HasColumnName("full_name").HasMaxLength(100).IsRequired();
+            e.HasIndex(x => x.FullName).HasDatabaseName("ix_patients_full_name");
+            e.Property(x => x.DateOfBirth).HasColumnName("date_of_birth").IsRequired();
+            e.Property(x => x.Gender).HasColumnName("gender").HasMaxLength(10).HasConversion<string>();
+            e.Property(x => x.Phone).HasColumnName("phone").HasMaxLength(15);
             e.Property(x => x.Address).HasColumnName("address").HasColumnType("TEXT");
-            e.Property(x => x.Deleted).HasColumnName("deleted").HasDefaultValue(false);
+            e.Property(x => x.Note).HasColumnName("note").HasColumnType("TEXT");
+            e.Property(x => x.IsDeleted).HasColumnName("is_deleted").HasDefaultValue(false);
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
-            // Index tìm kiếm theo tên
-            e.HasIndex(x => x.FullName).HasDatabaseName("ix_patients_full_name");
         });
 
-        // Visit
+        // ── Visit ─────────────────────────────────────────────────────────
         modelBuilder.Entity<Visit>(e =>
         {
             e.ToTable("visits");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(20).IsRequired();
+            e.HasIndex(x => x.Code).IsUnique();
             e.Property(x => x.VisitDate).HasColumnName("visit_date").IsRequired();
-            e.Property(x => x.ExaminationFee).HasColumnName("examination_fee").HasColumnType("NUMERIC(15,2)").IsRequired();
-            e.Property(x => x.Notes).HasColumnName("notes").HasColumnType("TEXT");
+            e.Property(x => x.Reason).HasColumnName("reason").HasColumnType("TEXT");
+            e.Property(x => x.Conclusion).HasColumnName("conclusion").HasColumnType("TEXT");
+            e.Property(x => x.Status).HasColumnName("status").HasMaxLength(20).HasConversion<string>();
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
             e.Property(x => x.UpdatedAt).HasColumnName("updated_at");
-            e.HasOne(x => x.Patient).WithMany().HasForeignKey(x => x.PatientId).OnDelete(DeleteBehavior.Cascade);
-            e.HasOne(x => x.Doctor).WithMany().HasForeignKey(x => x.DoctorId).OnDelete(DeleteBehavior.SetNull);
-            e.HasOne(x => x.Room).WithMany().HasForeignKey(x => x.RoomId).OnDelete(DeleteBehavior.SetNull);
-            e.HasOne(x => x.Diagnosis).WithMany().HasForeignKey(x => x.DiagnosisId).OnDelete(DeleteBehavior.SetNull);
+
+            e.HasOne(x => x.Patient).WithMany(p => p.Visits).HasForeignKey(x => x.PatientId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Doctor).WithMany(d => d.Visits).HasForeignKey(x => x.DoctorId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Room).WithMany(r => r.Visits).HasForeignKey(x => x.RoomId).OnDelete(DeleteBehavior.Restrict);
             e.HasMany(x => x.VisitServices).WithOne(vs => vs.Visit).HasForeignKey(vs => vs.VisitId).OnDelete(DeleteBehavior.Cascade);
-            // Performance indexes cho các FK hay dùng trong WHERE/JOIN
+            e.HasMany(x => x.VisitDiagnoses).WithOne(vd => vd.Visit).HasForeignKey(vd => vd.VisitId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Payment).WithOne(p => p.Visit).HasForeignKey<Payment>(p => p.VisitId);
+
             e.HasIndex(x => x.PatientId).HasDatabaseName("ix_visits_patient_id");
             e.HasIndex(x => x.DoctorId).HasDatabaseName("ix_visits_doctor_id");
             e.HasIndex(x => x.RoomId).HasDatabaseName("ix_visits_room_id");
-            e.HasIndex(x => x.DiagnosisId).HasDatabaseName("ix_visits_diagnosis_id");
             e.HasIndex(x => x.VisitDate).HasDatabaseName("ix_visits_visit_date");
         });
 
-        // VisitServiceItem
+        // ── VisitDiagnosis ────────────────────────────────────────────────
+        modelBuilder.Entity<VisitDiagnosis>(e =>
+        {
+            e.ToTable("visit_diagnoses");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.IsPrimary).HasColumnName("is_primary").HasDefaultValue(false);
+            e.Property(x => x.Note).HasColumnName("note").HasMaxLength(255);
+            e.HasIndex(x => new { x.VisitId, x.DiagnosisId }).IsUnique().HasDatabaseName("uq_visit_diagnosis");
+            e.HasOne(x => x.Visit).WithMany(v => v.VisitDiagnoses).HasForeignKey(x => x.VisitId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Diagnosis).WithMany(d => d.VisitDiagnoses).HasForeignKey(x => x.DiagnosisId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── VisitServiceItem ──────────────────────────────────────────────
         modelBuilder.Entity<VisitServiceItem>(e =>
         {
             e.ToTable("visit_services");
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
             e.Property(x => x.UnitPrice).HasColumnName("unit_price").HasColumnType("NUMERIC(15,2)").IsRequired();
-            e.Property(x => x.Quantity).HasColumnName("quantity").IsRequired();
+            e.Property(x => x.Quantity).HasColumnName("quantity").HasDefaultValue(1).IsRequired();
+            e.Ignore(x => x.TotalPrice);    // computed in C#, not a stored column
+            e.Property(x => x.Note).HasColumnName("note").HasMaxLength(255);
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
-            e.HasOne(x => x.Visit).WithMany(v => v.VisitServices).HasForeignKey(x => x.VisitId);
-            e.HasOne(x => x.Service).WithMany().HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(x => x.Visit).WithMany(v => v.VisitServices).HasForeignKey(x => x.VisitId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Service).WithMany(s => s.VisitServiceItems).HasForeignKey(x => x.ServiceId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── Payment ───────────────────────────────────────────────────────
+        modelBuilder.Entity<Payment>(e =>
+        {
+            e.ToTable("payments");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.ExaminationFee).HasColumnName("examination_fee").HasColumnType("NUMERIC(15,2)").IsRequired();
+            e.Property(x => x.ServiceTotal).HasColumnName("service_total").HasColumnType("NUMERIC(15,2)").IsRequired();
+            e.Property(x => x.Discount).HasColumnName("discount").HasColumnType("NUMERIC(15,2)").HasDefaultValue(0);
+            e.Property(x => x.FinalAmount).HasColumnName("final_amount").HasColumnType("NUMERIC(15,2)").IsRequired();
+            e.Property(x => x.PaymentMethod).HasColumnName("payment_method").HasMaxLength(20).HasConversion<string>();
+            e.Property(x => x.PaidAt).HasColumnName("paid_at");
+            e.Property(x => x.CashierNote).HasColumnName("cashier_note").HasColumnType("TEXT");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.Property(x => x.CashierUserId).HasColumnName("cashier_user_id");  // FK tường minh
+            e.HasOne(x => x.Cashier).WithMany().HasForeignKey(x => x.CashierUserId).OnDelete(DeleteBehavior.SetNull);
+        });
+
+        // ── Medicine ─────────────────────────────────────────────────────
+        modelBuilder.Entity<Medicine>(e =>
+        {
+            e.ToTable("medicines");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.Code).HasColumnName("code").HasMaxLength(20).IsRequired();
+            e.HasIndex(x => x.Code).IsUnique();
+            e.Property(x => x.Name).HasColumnName("name").HasMaxLength(200).IsRequired();
+            e.Property(x => x.Ingredient).HasColumnName("ingredient").HasColumnType("TEXT");
+            e.Property(x => x.DosageForm).HasColumnName("dosage_form").HasMaxLength(50);
+            e.Property(x => x.Unit).HasColumnName("unit").HasMaxLength(30).IsRequired();
+            e.Property(x => x.Manufacturer).HasColumnName("manufacturer").HasMaxLength(100);
+            e.Property(x => x.CountryOfOrigin).HasColumnName("country_of_origin").HasMaxLength(50);
+
+            e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+        });
+
+        // ── Prescription ─────────────────────────────────────────────────
+        modelBuilder.Entity<Prescription>(e =>
+        {
+            e.ToTable("prescriptions");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.Note).HasColumnName("note").HasColumnType("TEXT");
+            e.Property(x => x.CreatedAt).HasColumnName("created_at");
+            e.HasOne(x => x.Visit).WithOne(v => v.Prescription)
+                .HasForeignKey<Prescription>(x => x.VisitId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        // ── PrescriptionItem ──────────────────────────────────────────────
+        modelBuilder.Entity<PrescriptionItem>(e =>
+        {
+            e.ToTable("prescription_items");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Id).UseIdentityColumn();
+            e.Property(x => x.Quantity).HasColumnName("quantity").HasDefaultValue(1).IsRequired();
+
+            e.Property(x => x.DosageInstruction).HasColumnName("dosage_instruction").HasMaxLength(255);
+            e.Property(x => x.Note).HasColumnName("note").HasMaxLength(255);
+            e.HasIndex(x => new { x.PrescriptionId, x.MedicineId })
+                .IsUnique().HasDatabaseName("uq_prescription_medicine");
+            e.HasOne(x => x.Prescription).WithMany(p => p.Items)
+                .HasForeignKey(x => x.PrescriptionId).OnDelete(DeleteBehavior.Cascade);
+            e.HasOne(x => x.Medicine).WithMany(m => m.PrescriptionItems)
+                .HasForeignKey(x => x.MedicineId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        // ── SystemConfig ──────────────────────────────────────────────────
+        modelBuilder.Entity<SystemConfig>(e =>
+        {
+            e.ToTable("system_configs");
+            e.HasKey(x => x.ConfigKey);
+            e.Property(x => x.ConfigKey).HasColumnName("config_key").HasMaxLength(100).IsRequired();
+            e.Property(x => x.ConfigValue).HasColumnName("config_value").HasMaxLength(255).IsRequired();
+            e.Property(x => x.Description).HasColumnName("description").HasMaxLength(255);
+
+            // Seed default clinic configuration values
+            e.HasData(
+                new SystemConfig { ConfigKey = "clinic_name",        ConfigValue = "Phòng khám Đa khoa",         Description = "Tên phòng khám" },
+                new SystemConfig { ConfigKey = "clinic_address",     ConfigValue = "123 Đường ABC, Quận X, TP.HCM", Description = "Địa chỉ phòng khám" },
+                new SystemConfig { ConfigKey = "clinic_phone",       ConfigValue = "028 1234 5678",               Description = "Số điện thoại phòng khám" },
+                new SystemConfig { ConfigKey = "clinic_email",       ConfigValue = "",                            Description = "Email phòng khám" },
+                new SystemConfig { ConfigKey = "clinic_tax_code",    ConfigValue = "",                            Description = "Mã số thuế" },
+                new SystemConfig { ConfigKey = "examination_fee",          ConfigValue = "100000", Description = "Phí khám mặc định – bác sĩ thường (VNĐ)" },
+                new SystemConfig { ConfigKey = "fee_master_cki",            ConfigValue = "250000", Description = "Phí khám – Thạc sĩ / Bác sĩ chuyên khoa I (VNĐ)" },
+                new SystemConfig { ConfigKey = "fee_phd_ckii",              ConfigValue = "350000", Description = "Phí khám – Tiến sĩ / Bác sĩ chuyên khoa II (VNĐ)" },
+                new SystemConfig { ConfigKey = "fee_associate_professor",   ConfigValue = "450000", Description = "Phí khám – Phó Giáo sư (VNĐ)" },
+                new SystemConfig { ConfigKey = "fee_professor",             ConfigValue = "550000", Description = "Phí khám – Giáo sư (VNĐ)" },
+                new SystemConfig { ConfigKey = "currency",                 ConfigValue = "VND",    Description = "Đơn vị tiền tệ" },
+                new SystemConfig { ConfigKey = "receipt_footer",           ConfigValue = "Cảm ơn quý khách đã tin tưởng!", Description = "Chân trang phiếu thu" }
+            );
         });
     }
 
@@ -146,22 +294,21 @@ public class ClinicDbContext : DbContext
         {
             if (entry.State == EntityState.Added)
             {
-                if (entry.Entity is Doctor d) { d.CreatedAt = now; d.UpdatedAt = now; }
-                else if (entry.Entity is Room r) { r.CreatedAt = now; r.UpdatedAt = now; }
-                else if (entry.Entity is Diagnosis diag) { diag.CreatedAt = now; diag.UpdatedAt = now; }
-                else if (entry.Entity is MedicalService ms) { ms.CreatedAt = now; ms.UpdatedAt = now; }
-                else if (entry.Entity is Patient p) { p.CreatedAt = now; p.UpdatedAt = now; }
-                else if (entry.Entity is Visit v) { v.CreatedAt = now; v.UpdatedAt = now; }
-                else if (entry.Entity is VisitServiceItem vs) { vs.CreatedAt = now; }
+                if (entry.Entity is User u)                  { u.CreatedAt = now; u.UpdatedAt = now; }
+                else if (entry.Entity is Doctor d)           { d.CreatedAt = now; }
+                else if (entry.Entity is MedicalService ms)  { ms.CreatedAt = now; }
+                else if (entry.Entity is Patient p)          { p.CreatedAt = now; p.UpdatedAt = now; }
+                else if (entry.Entity is Visit v)            { v.CreatedAt = now; v.UpdatedAt = now; }
+                else if (entry.Entity is VisitServiceItem vs){ vs.CreatedAt = now; }
+                else if (entry.Entity is Payment pay)        { pay.CreatedAt = now; }
+                else if (entry.Entity is Medicine med)       { med.CreatedAt = now; }
+                else if (entry.Entity is Prescription prx)   { prx.CreatedAt = now; }
             }
             else if (entry.State == EntityState.Modified)
             {
-                if (entry.Entity is Doctor d) d.UpdatedAt = now;
-                else if (entry.Entity is Room r) r.UpdatedAt = now;
-                else if (entry.Entity is Diagnosis diag) diag.UpdatedAt = now;
-                else if (entry.Entity is MedicalService ms) ms.UpdatedAt = now;
+                if (entry.Entity is User u)         u.UpdatedAt = now;
                 else if (entry.Entity is Patient p) p.UpdatedAt = now;
-                else if (entry.Entity is Visit v) v.UpdatedAt = now;
+                else if (entry.Entity is Visit v)   v.UpdatedAt = now;
             }
         }
     }

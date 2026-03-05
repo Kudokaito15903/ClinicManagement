@@ -2,7 +2,6 @@ using ClinicManagement.Data;
 using ClinicManagement.DTOs.Responses;
 using ClinicManagement.Entities;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace ClinicManagement.Services;
 
@@ -11,21 +10,27 @@ public class BillingService
     private readonly ClinicDbContext _db;
     private readonly VisitService _visitService;
     private readonly VisitServiceService _visitServiceService;
-    private readonly string _clinicName;
 
     public BillingService(ClinicDbContext db, VisitService visitService,
-        VisitServiceService visitServiceService, IConfiguration config)
+        VisitServiceService visitServiceService)
     {
         _db = db;
         _visitService = visitService;
         _visitServiceService = visitServiceService;
-        _clinicName = config.GetValue<string>("Clinic:Name", "Phong kham Da khoa")!;
     }
 
     public async Task<BillResponse> GetBillAsync(long visitId)
     {
         var visit = await _visitService.GetByIdRawAsync(visitId);
         var patient = visit.Patient;
+        var payment = visit.Payment;
+        var primaryDiagnosis = visit.VisitDiagnoses
+            .FirstOrDefault(vd => vd.IsPrimary)?.Diagnosis
+            ?? visit.VisitDiagnoses.FirstOrDefault()?.Diagnosis;
+
+        // Đọc tên phòng khám từ system_configs (admin có thể thay đổi qua API)
+        var clinicNameConfig = await _db.SystemConfigs.FindAsync("clinic_name");
+        var clinicName = clinicNameConfig?.ConfigValue ?? "Phòng khám Đa khoa";
 
         var vsList = await _db.VisitServices
             .Include(vs => vs.Service)
@@ -34,24 +39,25 @@ public class BillingService
 
         var services = vsList.Select(_visitServiceService.ToResponse).ToList();
         var serviceTotal = services.Sum(s => s.Subtotal);
+        var examFee = payment?.ExaminationFee ?? 0;
 
         return new BillResponse(
             visit.Id,
             visit.VisitDate,
-            _clinicName,
+            clinicName,
             patient?.Code ?? "",
             patient?.FullName ?? "",
-            patient?.BirthYear,
-            patient?.Gender?.ToString(),
+            patient?.DateOfBirth.Year,
+            patient?.Gender.ToString(),
             patient?.Address,
             visit.Doctor?.FullName,
             visit.Room?.Name,
-            visit.Diagnosis?.Name,
-            visit.ExaminationFee,
-            visit.Notes,
+            primaryDiagnosis?.Name,
+            examFee,
+            visit.Reason,
             services,
             serviceTotal,
-            visit.ExaminationFee + serviceTotal
+            examFee + serviceTotal
         );
     }
 

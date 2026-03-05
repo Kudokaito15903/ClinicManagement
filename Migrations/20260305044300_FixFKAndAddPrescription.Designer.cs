@@ -3,6 +3,7 @@ using System;
 using ClinicManagement.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ClinicManagement.Migrations
 {
     [DbContext(typeof(ClinicDbContext))]
-    partial class ClinicDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260305044300_FixFKAndAddPrescription")]
+    partial class FixFKAndAddPrescription
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -242,6 +245,10 @@ namespace ClinicManagement.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("unit");
 
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("NUMERIC(15,2)")
+                        .HasColumnName("unit_price");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Code")
@@ -435,6 +442,10 @@ namespace ClinicManagement.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(1)
                         .HasColumnName("quantity");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("NUMERIC(15,2)")
+                        .HasColumnName("unit_price");
 
                     b.HasKey("Id");
 

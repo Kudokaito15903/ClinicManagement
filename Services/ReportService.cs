@@ -1,5 +1,6 @@
 using ClinicManagement.Data;
 using ClinicManagement.DTOs.Responses;
+using ClinicManagement.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClinicManagement.Services;
@@ -25,7 +26,7 @@ public class ReportService
         var todayEnd = todayStart.AddDays(1).AddTicks(-1);
         var monthStart = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-        long totalPatients = await _db.Patients.CountAsync(p => !p.Deleted);
+        long totalPatients = await _db.Patients.CountAsync(p => !p.IsDeleted);
         long visitsToday = await _db.Visits.CountAsync(v => v.VisitDate >= todayStart && v.VisitDate <= todayEnd);
         long visitsThisMonth = await _db.Visits.CountAsync(v => v.VisitDate >= monthStart && v.VisitDate <= todayEnd);
 
@@ -43,9 +44,9 @@ public class ReportService
         var end = to.ToDateTime(TimeOnly.MaxValue, DateTimeKind.Utc);
 
         long totalVisits = await _db.Visits.CountAsync(v => v.VisitDate >= start && v.VisitDate <= end);
-        decimal examTotal = await _db.Visits
-            .Where(v => v.VisitDate >= start && v.VisitDate <= end)
-            .SumAsync(v => (decimal?)v.ExaminationFee) ?? 0;
+        decimal examTotal = await _db.Payments
+            .Where(p => p.Visit.VisitDate >= start && p.Visit.VisitDate <= end)
+            .SumAsync(p => (decimal?)p.ExaminationFee) ?? 0;
 
         decimal svcTotal = await _db.VisitServices
             .Where(vs => vs.Visit.VisitDate >= start && vs.Visit.VisitDate <= end)
@@ -55,7 +56,8 @@ public class ReportService
         var visitsByDay = await _db.Visits
             .Where(v => v.VisitDate >= start && v.VisitDate <= end)
             .GroupBy(v => v.VisitDate.Date)
-            .Select(g => new { Date = g.Key, Count = g.LongCount(), ExamSum = g.Sum(v => v.ExaminationFee) })
+            .Select(g => new { Date = g.Key, Count = g.LongCount(),
+                ExamSum = g.Sum(v => v.Payment != null ? v.Payment.ExaminationFee : 0) })
             .ToListAsync();
 
         var svcByDay = await _db.VisitServices
@@ -85,20 +87,41 @@ public class ReportService
         var services = await _visitServiceService.FindByVisitIdAsync(visitId);
         var serviceTotal = services.Sum(s => s.Subtotal);
 
+        // Lấy phí khám thực tế nếu đã thanh toán, ngược lại lấy dự kiến từ SystemConfig
+        decimal examFee = 0;
+        if (visit.Payment != null)
+        {
+            examFee = visit.Payment.ExaminationFee;
+        }
+        else if (visit.Doctor != null)
+        {
+            var configKey = visit.Doctor.AcademicTitle switch
+            {
+                AcademicTitle.Professor          => "fee_professor",
+                AcademicTitle.AssociateProfessor => "fee_associate_professor",
+                AcademicTitle.PhD_CKII           => "fee_phd_ckii",
+                AcademicTitle.Master_CKI         => "fee_master_cki",
+                _                                => "examination_fee"
+            };
+            var config = await _db.SystemConfigs.FindAsync(configKey)
+                ?? await _db.SystemConfigs.FindAsync("examination_fee");
+            examFee = config != null && decimal.TryParse(config.ConfigValue, out var fee) ? fee : 100000m;
+        }
+
         return new VisitDetailResponse(
             await _visitService.ToResponseAsync(visit),
             services,
             serviceTotal,
-            visit.ExaminationFee,
-            serviceTotal + visit.ExaminationFee
+            examFee,
+            serviceTotal + examFee
         );
     }
 
     private async Task<decimal> SumRevenueAsync(DateTime from, DateTime to)
     {
-        var examFee = await _db.Visits
-            .Where(v => v.VisitDate >= from && v.VisitDate <= to)
-            .SumAsync(v => (decimal?)v.ExaminationFee) ?? 0;
+        var examFee = await _db.Payments
+            .Where(p => p.Visit.VisitDate >= from && p.Visit.VisitDate <= to)
+            .SumAsync(p => (decimal?)p.ExaminationFee) ?? 0;
 
         var svcFee = await _db.VisitServices
             .Where(vs => vs.Visit.VisitDate >= from && vs.Visit.VisitDate <= to)

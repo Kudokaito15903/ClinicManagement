@@ -48,5 +48,5 @@ public class MedicalServiceService
            ?? throw new ResourceNotFoundException($"Dich vu y te khong ton tai: {id}");
 
     public static MedicalServiceResponse ToResponse(MedicalService ms)
-        => new(ms.Id, ms.Code, ms.Name, ms.Price);
+        => new(ms.Id, ms.Code, ms.Name, ms.Unit, ms.Price, ms.Category, ms.IsActive);
 }
