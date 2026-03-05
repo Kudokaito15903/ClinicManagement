@@ -10,7 +10,7 @@ public class Medicine
     public string Unit { get; set; } = string.Empty;           // viên, lọ, hộp
     public string? Manufacturer { get; set; }                  // Nhà sản xuất
     public string? CountryOfOrigin { get; set; }               // Nước sản xuất
-    public decimal UnitPrice { get; set; }                     // Giá bán lẻ
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; }
 

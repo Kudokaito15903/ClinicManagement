@@ -55,11 +55,11 @@ public class DataSeeder
         if (!await db.Medicines.AnyAsync())
         {
             db.Medicines.AddRange(
-                new Medicine { Code = "M001", Name = "Paracetamol 500mg", Unit = "Viên", UnitPrice = 2000, Ingredient = "Paracetamol", DosageForm = "Viên nén", Manufacturer = "DHG Pharma" },
-                new Medicine { Code = "M002", Name = "Amoxicillin 500mg", Unit = "Viên", UnitPrice = 3500, Ingredient = "Amoxicillin", DosageForm = "Viên nang", Manufacturer = "Domesco" },
-                new Medicine { Code = "M003", Name = "Omeprazole 20mg", Unit = "Viên", UnitPrice = 5000, Ingredient = "Omeprazole", DosageForm = "Viên bao tan trong ruột", Manufacturer = "Traphaco" },
-                new Medicine { Code = "M004", Name = "Vitamin C 500mg", Unit = "Viên", UnitPrice = 1500, Ingredient = "Ascorbic Acid", DosageForm = "Viên nén", Manufacturer = "OPC" },
-                new Medicine { Code = "M005", Name = "Oresol", Unit = "Gói", UnitPrice = 4000, Ingredient = "Muối bù nước", DosageForm = "Bột", Manufacturer = "Navi" }
+                new Medicine { Code = "M001", Name = "Paracetamol 500mg", Unit = "Viên", Ingredient = "Paracetamol", DosageForm = "Viên nén", Manufacturer = "DHG Pharma" },
+                new Medicine { Code = "M002", Name = "Amoxicillin 500mg", Unit = "Viên", Ingredient = "Amoxicillin", DosageForm = "Viên nang", Manufacturer = "Domesco" },
+                new Medicine { Code = "M003", Name = "Omeprazole 20mg", Unit = "Viên", Ingredient = "Omeprazole", DosageForm = "Viên bao tan trong ruột", Manufacturer = "Traphaco" },
+                new Medicine { Code = "M004", Name = "Vitamin C 500mg", Unit = "Viên", Ingredient = "Ascorbic Acid", DosageForm = "Viên nén", Manufacturer = "OPC" },
+                new Medicine { Code = "M005", Name = "Oresol", Unit = "Gói", Ingredient = "Muối bù nước", DosageForm = "Bột", Manufacturer = "Navi" }
             );
             await db.SaveChangesAsync(); // Save to get IDs for foreign keys
         }
@@ -86,7 +86,7 @@ public class DataSeeder
             db.Prescriptions.Add(pres);
             await db.SaveChangesAsync();
 
-            db.PrescriptionItems.Add(new PrescriptionItem { PrescriptionId = pres.Id, MedicineId = medId, Quantity = 10, UnitPrice = 2000, DosageInstruction = "Sáng 1 viên, tối 1 viên" });
+            db.PrescriptionItems.Add(new PrescriptionItem { PrescriptionId = pres.Id, MedicineId = medId, Quantity = 10, DosageInstruction = "Sáng 1 viên, tối 1 viên" });
             await db.SaveChangesAsync();
         }
     }

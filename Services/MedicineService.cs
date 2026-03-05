@@ -15,7 +15,7 @@ public class MedicineService
     // ─── helpers ──────────────────────────────────────────────────────────────
     private static MedicineResponse ToResponse(Medicine m) => new(
         m.Id, m.Code, m.Name, m.Ingredient, m.DosageForm, m.Unit,
-        m.Manufacturer, m.CountryOfOrigin, m.UnitPrice, m.IsActive, m.CreatedAt);
+        m.Manufacturer, m.CountryOfOrigin, m.IsActive, m.CreatedAt);
 
     // ─── GET list ─────────────────────────────────────────────────────────────
     public async Task<List<MedicineResponse>> GetAllAsync(string? search, bool? activeOnly)
@@ -55,7 +55,6 @@ public class MedicineService
             Code            = req.Code.Trim().ToUpper(),
             Name            = req.Name,
             Unit            = req.Unit,
-            UnitPrice       = req.UnitPrice,
             Ingredient      = req.Ingredient,
             DosageForm      = req.DosageForm,
             Manufacturer    = req.Manufacturer,
@@ -76,7 +75,6 @@ public class MedicineService
 
         m.Name            = req.Name;
         m.Unit            = req.Unit;
-        m.UnitPrice       = req.UnitPrice;
         m.Ingredient      = req.Ingredient;
         m.DosageForm      = req.DosageForm;
         m.Manufacturer    = req.Manufacturer;

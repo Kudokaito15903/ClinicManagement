@@ -212,7 +212,7 @@ public class ClinicDbContext : DbContext
             e.Property(x => x.Unit).HasColumnName("unit").HasMaxLength(30).IsRequired();
             e.Property(x => x.Manufacturer).HasColumnName("manufacturer").HasMaxLength(100);
             e.Property(x => x.CountryOfOrigin).HasColumnName("country_of_origin").HasMaxLength(50);
-            e.Property(x => x.UnitPrice).HasColumnName("unit_price").HasColumnType("NUMERIC(15,2)").IsRequired();
+
             e.Property(x => x.IsActive).HasColumnName("is_active").HasDefaultValue(true);
             e.Property(x => x.CreatedAt).HasColumnName("created_at");
         });
@@ -237,7 +237,7 @@ public class ClinicDbContext : DbContext
             e.HasKey(x => x.Id);
             e.Property(x => x.Id).UseIdentityColumn();
             e.Property(x => x.Quantity).HasColumnName("quantity").HasDefaultValue(1).IsRequired();
-            e.Property(x => x.UnitPrice).HasColumnName("unit_price").HasColumnType("NUMERIC(15,2)").IsRequired();
+
             e.Property(x => x.DosageInstruction).HasColumnName("dosage_instruction").HasMaxLength(255);
             e.Property(x => x.Note).HasColumnName("note").HasMaxLength(255);
             e.HasIndex(x => new { x.PrescriptionId, x.MedicineId })

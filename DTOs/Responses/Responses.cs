@@ -148,7 +148,6 @@ public record MedicineResponse(
     string Unit,
     string? Manufacturer,
     string? CountryOfOrigin,
-    decimal UnitPrice,
     bool IsActive,
     DateTime CreatedAt
 );
@@ -162,8 +161,6 @@ public record PrescriptionItemResponse(
     string? DosageForm,
     string Unit,
     int Quantity,
-    decimal UnitPrice,
-    decimal Subtotal,
     string? DosageInstruction,
     string? Note
 );

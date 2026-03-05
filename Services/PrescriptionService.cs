@@ -26,8 +26,6 @@ public class PrescriptionService
             i.Medicine.DosageForm,
             i.Medicine.Unit,
             i.Quantity,
-            i.UnitPrice,
-            i.Quantity * i.UnitPrice,
             i.DosageInstruction,
             i.Note
         )).ToList()
@@ -111,7 +109,6 @@ public class PrescriptionService
             PrescriptionId    = p.Id,
             MedicineId        = req.MedicineId,
             Quantity          = req.Quantity,
-            UnitPrice         = req.UnitPrice,
             DosageInstruction = req.DosageInstruction,
             Note              = req.Note
         };
@@ -131,7 +128,6 @@ public class PrescriptionService
             ?? throw new ResourceNotFoundException($"Mục đơn thuốc {itemId} không thuộc đơn này.");
 
         item.Quantity          = req.Quantity;
-        item.UnitPrice         = req.UnitPrice;
         item.DosageInstruction = req.DosageInstruction;
         item.Note              = req.Note;
         await _db.SaveChangesAsync();

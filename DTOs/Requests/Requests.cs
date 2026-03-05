@@ -93,7 +93,6 @@ public record MedicineCreateRequest(
     [Required] string Code,
     [Required] string Name,
     [Required] string Unit,
-    [Required][Range(0, double.MaxValue)] decimal UnitPrice,
     string? Ingredient,
     string? DosageForm,
     string? Manufacturer,
@@ -103,7 +102,6 @@ public record MedicineCreateRequest(
 public record MedicineUpdateRequest(
     [Required] string Name,
     [Required] string Unit,
-    [Required][Range(0, double.MaxValue)] decimal UnitPrice,
     string? Ingredient,
     string? DosageForm,
     string? Manufacturer,
@@ -122,14 +120,12 @@ public record PrescriptionUpdateRequest(
 public record PrescriptionItemAddRequest(
     [Required] long MedicineId,
     [Required][Range(1, int.MaxValue)] int Quantity,
-    [Required][Range(0, double.MaxValue)] decimal UnitPrice,
     string? DosageInstruction,
     string? Note
 );
 
 public record PrescriptionItemUpdateRequest(
     [Required][Range(1, int.MaxValue)] int Quantity,
-    [Required][Range(0, double.MaxValue)] decimal UnitPrice,
     string? DosageInstruction,
     string? Note
 );
